@@ -17,6 +17,7 @@ import BottomNav from './components/BottomNav';
 import Settings from './components/Settings';
 import WordPractice from './components/WordPractice';
 import SessionHistory from './components/SessionHistory';
+import QuickSetup from './components/QuickSetup';
 
 // Context for recordings — so activities can play custom sounds
 export const RecordingsContext = createContext({
@@ -182,10 +183,14 @@ export default function App() {
               </button>
 
               {knownPhonemes.length > 0 && (
-                <button onClick={handleStartAssessment} style={{background:"linear-gradient(135deg, #b088f9, #7c5cbf)",border:"none",borderRadius:20,padding:"14px 36px",fontSize:18,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 6px 24px rgba(176,136,249,0.3)",display:"block",width:"100%",maxWidth:340,margin:"0 auto 20px"}}>
+                <button onClick={handleStartAssessment} style={{background:"linear-gradient(135deg, #b088f9, #7c5cbf)",border:"none",borderRadius:20,padding:"14px 36px",fontSize:18,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 6px 24px rgba(176,136,249,0.3)",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
                   📋 Test Logan
                 </button>
               )}
+
+              <button onClick={() => setScreen("quicksetup")} style={{background:"transparent",border:"2px solid #f4a261",borderRadius:16,padding:"10px 24px",fontSize:14,fontFamily:"'Fredoka', sans-serif",color:"#f4a261",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto 20px"}}>
+                ⚡ Quick Setup — mark sounds as known
+              </button>
 
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 <button onClick={() => setScreen("words")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
@@ -316,6 +321,14 @@ export default function App() {
           {screen === "library" && <SoundLibrary progress={progress} />}
 
           {/* SETTINGS */}
+          {screen === "quicksetup" && (
+            <QuickSetup
+              progress={progress}
+              updatePhonemeProgress={updatePhonemeProgress}
+              onClose={() => setScreen("home")}
+            />
+          )}
+
           {screen === "settings" && (
             <Settings
               familyCode={familyCode}

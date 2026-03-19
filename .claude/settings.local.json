@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /c/Users/russ/Downloads/*phon*)",
+      "Bash(ls /c/Users/russ/Desktop/*phon*)",
+      "Bash(ls /c/Users/russ/Documents/*phon*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(cp -r /c/Users/russ/website_phonics_temp/* /c/Users/russ/website_phonics/)",
+      "Bash(cp /c/Users/russ/website_phonics_temp/.gitignore /c/Users/russ/website_phonics/)",
+      "Bash(rm -rf /c/Users/russ/website_phonics_temp)",
+      "Bash(npx vite:*)",
+      "Bash(kill %1)",
+      "Bash(gh auth:*)",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

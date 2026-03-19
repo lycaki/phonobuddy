@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html><head><title>PhonoBuddy Recording Check</title></head>
+<body style="background:#0f1729;color:white;font-family:sans-serif;padding:20px">
+<h1>PhonoBuddy Recording Diagnostic</h1>
+<div id="out"></div>
+<button id="playTest" style="display:none;margin:20px 0;padding:12px 24px;font-size:16px;background:#4ecdc4;border:none;border-radius:8px;cursor:pointer">▶️ Test play "s" recording</button>
+<script type="module">
+import Dexie from 'https://esm.sh/dexie@4';
+const db = new Dexie('phonobuddy');
+db.version(2).stores({
+  progress: 'id',
+  recordings: 'phonemeId',
+  settings: 'key',
+  sessions: '++id, date',
+});
+
+const out = document.getElementById('out');
+function log(msg) { out.innerHTML += `<p style="margin:4px 0">${msg}</p>`; }
+
+try {
+  const allRecs = await db.recordings.toArray();
+  log(`<b style="font-size:24px;color:#ffd966">Total recordings in DB: ${allRecs.length}</b>`);
+
+  const sounds = allRecs.filter(r => !r.phonemeId.startsWith('word:'));
+  const words = allRecs.filter(r => r.phonemeId.startsWith('word:'));
+
+  log(`<span style="color:#4ecdc4;font-size:18px">🔤 Sound recordings: ${sounds.length}</span>`);
+  log(`<span style="color:#b088f9;font-size:18px">📖 Word recordings: ${words.length}</span>`);
+
+  // Check sounds
+  log('<br><b style="color:#4ecdc4">Sound recordings:</b>');
+  if (sounds.length === 0) {
+    log('&nbsp;&nbsp;<span style="color:#e88d8d">❌ NO SOUND RECORDINGS FOUND</span>');
+  } else {
+    sounds.forEach(r => {
+      const hasBlob = r.blob && r.blob.size > 0;
+      const color = hasBlob ? '#7bc67e' : '#e88d8d';
+      log(`&nbsp;&nbsp;<span style="color:${color}">${hasBlob ? '✅' : '❌'} ${r.phonemeId} — ${hasBlob ? r.blob.size + ' bytes' : 'NO BLOB'}</span>`);
+    });
+
+    // Test playback of first sound
+    const testRec = sounds[0];
+    if (testRec && testRec.blob) {
+      const btn = document.getElementById('playTest');
+      btn.style.display = 'block';
+      btn.textContent = `▶️ Test play "${testRec.phonemeId}" recording`;
+      btn.onclick = () => {
+        const url = URL.createObjectURL(testRec.blob);
+        new Audio(url).play();
+      };
+    }
+  }
+
+  // Check words
+  log('<br><b style="color:#b088f9">Word recordings:</b>');
+  if (words.length === 0) {
+    log('&nbsp;&nbsp;<span style="color:#e88d8d">❌ NO WORD RECORDINGS FOUND — they did not save</span>');
+    log('&nbsp;&nbsp;<span style="color:#f4a261">This means recordings were lost. You will need to re-record words.</span>');
+  } else {
+    words.sort((a,b) => a.phonemeId.localeCompare(b.phonemeId));
+    words.forEach(r => {
+      const hasBlob = r.blob && r.blob.size > 0;
+      const color = hasBlob ? '#7bc67e' : '#e88d8d';
+      const word = r.phonemeId.replace('word:', '');
+      log(`&nbsp;&nbsp;<span style="color:${color}">${hasBlob ? '✅' : '❌'} ${word} — ${hasBlob ? r.blob.size + ' bytes' : 'NO BLOB'}</span>`);
+    });
+  }
+
+  // Summary
+  const validSounds = sounds.filter(r => r.blob && r.blob.size > 0).length;
+  const validWords = words.filter(r => r.blob && r.blob.size > 0).length;
+  log(`<br><b style="font-size:18px;color:#ffd966">Summary: ${validSounds} valid sounds, ${validWords} valid words</b>`);
+
+} catch(e) {
+  log(`<b style="color:red">Error: ${e.message}</b>`);
+  log(`<pre>${e.stack}</pre>`);
+}
+</script>
+</body></html>

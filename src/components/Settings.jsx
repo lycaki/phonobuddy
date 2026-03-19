@@ -5,7 +5,7 @@ import { db, getAllRecordingIds, getRecordingBlob, saveRecordingBlob } from '../
 import { PHONEMES } from '../data/phonemes';
 import { MASTERY_LEVELS } from '../data/leitner';
 
-export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud, syncStatus, onReset, progress, sessionCount }) {
+export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud, syncStatus, onReset, progress, sessionCount, onSyncProgress, onPullProgress, progressSyncStatus }) {
   const [cleared, setCleared] = useState(null);
   const [backupStatus, setBackupStatus] = useState(null);
 
@@ -186,6 +186,35 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
         onPullFromCloud={onPullFromCloud}
         syncStatus={syncStatus}
       />
+
+      {/* PROGRESS SYNC */}
+      {familyCode && (
+        <div style={{background:"#1a2744",borderRadius:16,padding:16,marginTop:16}}>
+          <h3 style={{fontFamily:"'Fredoka'",fontSize:16,color:"#b088f9",margin:"0 0 8px"}}>📊 Progress Sync</h3>
+          <p style={{fontFamily:"'Andika'",fontSize:13,color:"#a0aec0",margin:"0 0 12px"}}>
+            Sync Logan's mastery levels, scores, and session history across devices.
+            Progress auto-syncs after every session.
+          </p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <button onClick={onSyncProgress} disabled={progressSyncStatus === 'syncing'} style={{
+              background: progressSyncStatus === 'syncing' ? "#2a3a5c" : "#b088f9",
+              border:"none",borderRadius:10,padding:"10px 14px",fontSize:14,
+              fontFamily:"'Fredoka'",color: progressSyncStatus === 'syncing' ? "#a0aec0" : "#0f1729",cursor:"pointer",
+            }}>
+              {progressSyncStatus === 'syncing' ? '⏫ Syncing...' : '⬆️ Push progress'}
+            </button>
+            <button onClick={onPullProgress} disabled={progressSyncStatus === 'syncing'} style={{
+              background: progressSyncStatus === 'syncing' ? "#2a3a5c" : "#4ecdc4",
+              border:"none",borderRadius:10,padding:"10px 14px",fontSize:14,
+              fontFamily:"'Fredoka'",color: progressSyncStatus === 'syncing' ? "#a0aec0" : "#0f1729",cursor:"pointer",
+            }}>
+              {progressSyncStatus === 'syncing' ? '⏬ Syncing...' : '⬇️ Pull progress'}
+            </button>
+          </div>
+          {progressSyncStatus === 'done' && <p style={{fontFamily:"'Andika'",fontSize:12,color:"#7bc67e",margin:"8px 0 0",textAlign:"center"}}>✅ Progress synced!</p>}
+          {progressSyncStatus === 'error' && <p style={{fontFamily:"'Andika'",fontSize:12,color:"#e88d8d",margin:"8px 0 0",textAlign:"center"}}>❌ Sync failed — check connection</p>}
+        </div>
+      )}
 
       {/* BACKUP / RESTORE */}
       <div style={{background:"#1a2744",borderRadius:16,padding:16,marginTop:16,marginBottom:16}}>

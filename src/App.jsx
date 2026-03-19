@@ -31,7 +31,7 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [familyCode, setFamilyCode] = useState(null);
 
-  const { progress, sessionCount, loaded, updatePhonemeProgress, incrementSessionCount, resetAll } = useProgress();
+  const { progress, sessionCount, loaded, updatePhonemeProgress, incrementSessionCount, resetAll, syncToCloud, syncFromCloud, syncStatus } = useProgress(familyCode);
   const recordings = useRecordings(familyCode);
   const session = useSession(progress, updatePhonemeProgress, incrementSessionCount, sessionCount);
 
@@ -325,6 +325,9 @@ export default function App() {
               onReset={resetAll}
               progress={progress}
               sessionCount={sessionCount}
+              onSyncProgress={syncToCloud}
+              onPullProgress={syncFromCloud}
+              progressSyncStatus={syncStatus}
             />
           )}
         </div>

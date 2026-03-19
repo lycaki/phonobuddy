@@ -145,3 +145,75 @@ export async function validateFamilyCode(code) {
   const ids = await listRemoteRecordings(code);
   return ids.length > 0;
 }
+
+// ─── PROGRESS SYNC ───
+
+// Upload all progress data to cloud
+export async function uploadProgress(familyCode, progress, sessionCount) {
+  const db = await getFirebaseDb();
+  if (!db || !familyCode) return;
+
+  const { ref, set } = await import('firebase/database');
+
+  // Strip blobs/non-serialisable data, keep only progress state
+  const cleanProgress = {};
+  for (const [id, p] of Object.entries(progress)) {
+    cleanProgress[sanitiseKey(id)] = {
+      id: p.id,
+      mastery: p.mastery || 0,
+      correct: p.correct || 0,
+      incorrect: p.incorrect || 0,
+      streak: p.streak || 0,
+      wrongStreak: p.wrongStreak || 0,
+      introduced: p.introduced || false,
+      lastSeen: p.lastSeen || null,
+      lastSeenSession: p.lastSeenSession || null,
+      assessments: (p.assessments || []).slice(-10), // keep last 10
+    };
+  }
+
+  await set(ref(db, `progress/${familyCode}`), {
+    phonemes: cleanProgress,
+    sessionCount: sessionCount || 0,
+    lastSynced: Date.now(),
+    device: navigator.userAgent.slice(0, 50),
+  });
+}
+
+// Download progress from cloud
+export async function downloadProgress(familyCode) {
+  const db = await getFirebaseDb();
+  if (!db || !familyCode) return null;
+
+  const { ref, get } = await import('firebase/database');
+  const snapshot = await get(ref(db, `progress/${familyCode}`));
+  if (!snapshot.exists()) return null;
+
+  const data = snapshot.val();
+  const progress = {};
+
+  if (data.phonemes) {
+    for (const [key, p] of Object.entries(data.phonemes)) {
+      const id = unsanitiseKey(key);
+      progress[id] = { ...p, id, box: p.mastery || 0 }; // legacy compat
+    }
+  }
+
+  return {
+    progress,
+    sessionCount: data.sessionCount || 0,
+    lastSynced: data.lastSynced,
+  };
+}
+
+// Upload a single session result
+export async function uploadSession(familyCode, sessionData) {
+  const db = await getFirebaseDb();
+  if (!db || !familyCode) return;
+
+  const { ref, push } = await import('firebase/database');
+  await push(ref(db, `sessions/${familyCode}`), {
+    ...sessionData,
+    device: navigator.userAgent.slice(0, 50),
+  });
+}

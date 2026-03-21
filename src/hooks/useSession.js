@@ -61,6 +61,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   const resultsRef = useRef([]);
   const timerValRef = useRef(0);
   const activitiesRef = useRef([]);
+  const activityIndexRef = useRef(0);
 
   useEffect(() => {
     if (isActive) {
@@ -74,6 +75,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   useEffect(() => { resultsRef.current = sessionResults; }, [sessionResults]);
   useEffect(() => { timerValRef.current = sessionTimer; }, [sessionTimer]);
   useEffect(() => { activitiesRef.current = sessionActivities; }, [sessionActivities]);
+  useEffect(() => { activityIndexRef.current = activityIndex; }, [activityIndex]);
 
   // ─── START LEARNING SESSION ───
   const startSession = useCallback(() => {
@@ -233,11 +235,25 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     });
   }, [incrementSessionCount, sessionMode]);
 
+  // Advance to next activity using refs (avoids stale closure in setTimeout)
+  const advanceActivity = useCallback((delay = 500) => {
+    setTimeout(() => {
+      const idx = activityIndexRef.current;
+      const acts = activitiesRef.current;
+      if (idx + 1 < acts.length) {
+        setActivityIndex(idx + 1);
+      } else {
+        endSession();
+      }
+    }, delay);
+  }, [endSession]);
+
   const handleActivityResult = useCallback((correct, confusedId) => {
-    const activity = sessionActivities[activityIndex];
+    const activity = activitiesRef.current[activityIndexRef.current];
+    if (!activity) return;
     setSessionResults(prev => [...prev, { activity, correct }]);
 
-    if (activity.type === "identify") {
+    if (activity.type === "identify" && activity.phoneme) {
       const pid = activity.phoneme.id;
       updatePhonemeProgress(pid, current => {
         const newStreak = correct ? (current.streak || 0) + 1 : 0;
@@ -248,7 +264,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
         return {
           ...current,
           mastery: newMastery,
-          box: newMastery, // legacy compat
+          box: newMastery,
           correct: (current.correct || 0) + (correct ? 1 : 0),
           incorrect: (current.incorrect || 0) + (correct ? 0 : 1),
           lastSeen: new Date().toISOString(),
@@ -257,7 +273,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
           wrongStreak: newWrongStreak,
           introduced: true,
           assessments: [
-            ...(current.assessments || []).slice(-19), // keep last 20
+            ...(current.assessments || []).slice(-19),
             { date: new Date().toISOString(), correct, mode: sessionMode },
           ],
         };
@@ -272,32 +288,20 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
       });
     }
 
-    setTimeout(() => {
-      if (activityIndex + 1 < sessionActivities.length) {
-        setActivityIndex(i => i + 1);
-      } else {
-        endSession();
-      }
-    }, 1200);
-  }, [sessionActivities, activityIndex, updatePhonemeProgress, endSession, sessionCount, sessionMode]);
+    advanceActivity(1200);
+  }, [updatePhonemeProgress, endSession, sessionCount, sessionMode, advanceActivity]);
 
   const handleIntroComplete = useCallback((phoneme) => {
     updatePhonemeProgress(phoneme.id, current => ({
       ...current,
       introduced: true,
-      mastery: 1, // starts at level 1: does not know yet
+      mastery: 1,
       box: 1,
       lastSeen: new Date().toISOString(),
       lastSeenSession: sessionCount || 0,
     }));
-    setTimeout(() => {
-      if (activityIndex + 1 < sessionActivities.length) {
-        setActivityIndex(i => i + 1);
-      } else {
-        endSession();
-      }
-    }, 500);
-  }, [activityIndex, sessionActivities, updatePhonemeProgress, endSession, sessionCount]);
+    advanceActivity(500);
+  }, [updatePhonemeProgress, endSession, sessionCount, advanceActivity]);
 
   const timerColor = sessionTimer > 900 ? "#e88d8d" : sessionTimer > 600 ? "#f4a261" : "#7bc67e";
 

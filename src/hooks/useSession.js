@@ -303,12 +303,17 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     advanceActivity(500);
   }, [updatePhonemeProgress, endSession, sessionCount, advanceActivity]);
 
+  // Manual skip — parent can force advance if stuck
+  const skipActivity = useCallback(() => {
+    advanceActivity(0);
+  }, [advanceActivity]);
+
   const timerColor = sessionTimer > 900 ? "#e88d8d" : sessionTimer > 600 ? "#f4a261" : "#7bc67e";
 
   return {
     sessionActivities, activityIndex, sessionResults, sessionTimer, timerColor,
     showBedTrick, setShowBedTrick, isActive, sessionMode,
     startSession, startAssessment, endSession,
-    handleActivityResult, handleIntroComplete,
+    handleActivityResult, handleIntroComplete, skipActivity,
   };
 }

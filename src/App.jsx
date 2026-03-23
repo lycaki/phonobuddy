@@ -287,6 +287,13 @@ export default function App() {
                   />
                 )}
               </div>
+
+              {/* Manual skip button — always visible for parent */}
+              <div style={{textAlign:"center",marginTop:12}}>
+                <button onClick={session.skipActivity} style={{background:"transparent",border:"1px solid #2a3a5c",borderRadius:10,padding:"6px 16px",fontSize:12,fontFamily:"'Andika'",color:"#4a5578",cursor:"pointer"}}>
+                  Skip →
+                </button>
+              </div>
             </div>
           )}
 

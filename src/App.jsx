@@ -266,6 +266,7 @@ export default function App() {
               <div style={{background:"rgba(26,39,68,0.6)",borderRadius:24,padding:24,backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.05)"}}>
                 {session.sessionActivities[session.activityIndex]?.type === "identify" && (
                   <IdentifySound
+                    key={`id-${session.activityIndex}`}
                     targetPhoneme={session.sessionActivities[session.activityIndex].phoneme}
                     allPhonemes={knownPhonemes.length >= 4 ? knownPhonemes : PHONEMES.slice(0, 4)}
                     onResult={session.handleActivityResult}
@@ -273,12 +274,14 @@ export default function App() {
                 )}
                 {session.sessionActivities[session.activityIndex]?.type === "introduce" && (
                   <IntroduceSound
+                    key={`intro-${session.activityIndex}`}
                     phoneme={session.sessionActivities[session.activityIndex].phoneme}
                     onComplete={() => session.handleIntroComplete(session.sessionActivities[session.activityIndex].phoneme)}
                   />
                 )}
                 {session.sessionActivities[session.activityIndex]?.type === "blend" && (
                   <Blending
+                    key={`blend-${session.activityIndex}`}
                     word={session.sessionActivities[session.activityIndex].word}
                     onResult={(correct) => session.handleActivityResult(correct)}
                   />

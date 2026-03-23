@@ -1,13 +1,15 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import PhonoBuddyOwl from '../PhonoBuddyOwl';
 import { RecordingsContext } from '../../App';
-import { speakPhoneme } from '../../utils/speech';
 
 export default function IdentifySound({ targetPhoneme, allPhonemes, onResult }) {
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const [hasPlayed, setHasPlayed] = useState(false);
   const { playSound } = useContext(RecordingsContext);
+  const playSoundRef = useRef(playSound);
+  useEffect(() => { playSoundRef.current = playSound; }, [playSound]);
 
   useEffect(() => {
     const distractors = allPhonemes
@@ -18,8 +20,19 @@ export default function IdentifySound({ targetPhoneme, allPhonemes, onResult }) 
     setOptions(opts);
     setSelected(null);
     setShowResult(false);
-    setTimeout(() => playSound(targetPhoneme.grapheme), 500);
+    setHasPlayed(false);
+
+    // Auto-play — use ref to avoid stale closure, try after short delay
+    const timer = setTimeout(() => {
+      playSoundRef.current(targetPhoneme.id).then(() => setHasPlayed(true)).catch(() => {});
+    }, 600);
+    return () => clearTimeout(timer);
   }, [targetPhoneme.id]);
+
+  function handlePlaySound() {
+    playSound(targetPhoneme.id);
+    setHasPlayed(true);
+  }
 
   function handleSelect(p) {
     if (showResult) return;
@@ -37,9 +50,20 @@ export default function IdentifySound({ targetPhoneme, allPhonemes, onResult }) 
       <p style={{fontFamily:"'Fredoka', sans-serif",fontSize:24,color:"#ffd966",margin:"0 0 8px"}}>
         Listen to the sound...
       </p>
-      <button onClick={() => playSound(targetPhoneme.grapheme)} style={{background:"#ffd966",border:"none",borderRadius:50,width:72,height:72,fontSize:32,cursor:"pointer",marginBottom:24,boxShadow:"0 4px 20px rgba(255,217,102,0.4)"}}>
+      <button onClick={handlePlaySound} style={{
+        background: hasPlayed ? "#ffd966" : "#ff9a9e",
+        border: hasPlayed ? "none" : "3px solid #ffd966",
+        borderRadius:50, width:72, height:72, fontSize:32, cursor:"pointer",
+        marginBottom:24, boxShadow:"0 4px 20px rgba(255,217,102,0.4)",
+        animation: hasPlayed ? "none" : "pulse 1.5s infinite",
+      }}>
         🔊
       </button>
+      {!hasPlayed && (
+        <p style={{fontFamily:"'Andika'",fontSize:13,color:"#f4a261",margin:"-16px 0 16px"}}>
+          Tap to hear the sound
+        </p>
+      )}
       <p style={{fontFamily:"'Fredoka', sans-serif",fontSize:22,color:"#f0f0f0",margin:"0 0 20px"}}>
         Which letter makes this sound?
       </p>

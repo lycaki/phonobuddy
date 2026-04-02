@@ -62,6 +62,9 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   const timerValRef = useRef(0);
   const activitiesRef = useRef([]);
   const activityIndexRef = useRef(0);
+  const isAdvancingRef = useRef(false); // guard against double-fire
+  const sessionModeRef = useRef("learn");
+  const sessionCountRef = useRef(sessionCount);
 
   useEffect(() => {
     if (isActive) {
@@ -72,10 +75,12 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     }
   }, [isActive]);
 
+  // Keep refs in sync — these are READ ONLY by timeouts/callbacks
   useEffect(() => { resultsRef.current = sessionResults; }, [sessionResults]);
   useEffect(() => { timerValRef.current = sessionTimer; }, [sessionTimer]);
-  useEffect(() => { activitiesRef.current = sessionActivities; }, [sessionActivities]);
-  useEffect(() => { activityIndexRef.current = activityIndex; }, [activityIndex]);
+  useEffect(() => { sessionModeRef.current = sessionMode; }, [sessionMode]);
+  useEffect(() => { sessionCountRef.current = sessionCount; }, [sessionCount]);
+  // NOTE: activitiesRef and activityIndexRef are updated SYNCHRONOUSLY below
 
   // ─── START LEARNING SESSION ───
   const startSession = useCallback(() => {
@@ -156,6 +161,10 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
       if (w) activities.push({ type: "blend", word: w });
     }
 
+    // Update refs SYNCHRONOUSLY before setting state
+    activitiesRef.current = activities;
+    activityIndexRef.current = 0;
+    isAdvancingRef.current = false;
     setSessionActivities(activities);
     setActivityIndex(0);
     setSessionResults([]);
@@ -192,6 +201,9 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
       activities.push({ type: "blend", word: w, isAssessment: true });
     });
 
+    activitiesRef.current = activities;
+    activityIndexRef.current = 0;
+    isAdvancingRef.current = false;
     setSessionActivities(activities);
     setActivityIndex(0);
     setSessionResults([]);
@@ -201,60 +213,92 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     setIsActive(true);
   }, [progress]);
 
+  // Manual end session (exit button)
   const endSession = useCallback(() => {
+    isAdvancingRef.current = false;
     setIsActive(false);
     incrementSessionCount();
-
-    const results = resultsRef.current;
-    const activities = activitiesRef.current;
-    const duration = timerValRef.current;
-    const correct = results.filter(r => r.correct).length;
-    const incorrect = results.filter(r => !r.correct).length;
-    const newSounds = activities.filter(a => a.type === "introduce").map(a => a.phoneme.grapheme);
-    const reviewedSounds = [...new Set(
-      results.filter(r => r.activity.type === "identify").map(r => r.activity.phoneme.grapheme)
-    )];
-    const wordsTried = [...new Set(
-      results.filter(r => r.activity.type === "blend").map(r => r.activity.word.word)
-    )];
-
     saveSession({
-      duration,
-      mode: sessionMode === "assess" ? "assessment" : "learning",
-      activitiesCompleted: results.length,
-      correct,
-      incorrect,
-      newSoundsIntroduced: newSounds,
-      soundsReviewed: reviewedSounds,
-      wordsTried,
-      results: results.map(r => ({
-        type: r.activity.type,
-        target: r.activity.type === "blend" ? r.activity.word.word : r.activity.phoneme?.grapheme,
-        correct: r.correct,
-      })),
+      duration: timerValRef.current,
+      mode: sessionModeRef.current === "assess" ? "assessment" : "learning",
+      activitiesCompleted: resultsRef.current.length,
+      correct: resultsRef.current.filter(r => r.correct).length,
+      incorrect: resultsRef.current.filter(r => !r.correct).length,
+      newSoundsIntroduced: activitiesRef.current.filter(a => a.type === "introduce").map(a => a.phoneme?.grapheme).filter(Boolean),
+      soundsReviewed: [],
+      wordsTried: [],
+      results: [],
     });
-  }, [incrementSessionCount, sessionMode]);
+  }, [incrementSessionCount]);
 
-  // Advance to next activity using refs (avoids stale closure in setTimeout)
+  // ─── ADVANCE: the one function that moves to next activity ───
+  // Uses refs directly, guarded against double-fire
+  const doAdvance = useCallback(() => {
+    const idx = activityIndexRef.current;
+    const acts = activitiesRef.current;
+    const nextIdx = idx + 1;
+
+    if (nextIdx < acts.length) {
+      // Update ref SYNCHRONOUSLY so next call sees the new value immediately
+      activityIndexRef.current = nextIdx;
+      isAdvancingRef.current = false;
+      setActivityIndex(nextIdx);
+    } else {
+      isAdvancingRef.current = false;
+      // End session
+      setIsActive(false);
+      incrementSessionCount();
+
+      const results = resultsRef.current;
+      const duration = timerValRef.current;
+      const correct = results.filter(r => r.correct).length;
+      const incorrect = results.filter(r => !r.correct).length;
+      const newSounds = acts.filter(a => a.type === "introduce").map(a => a.phoneme.grapheme);
+      const reviewedSounds = [...new Set(
+        results.filter(r => r.activity?.type === "identify").map(r => r.activity.phoneme?.grapheme).filter(Boolean)
+      )];
+      const wordsTried = [...new Set(
+        results.filter(r => r.activity?.type === "blend").map(r => r.activity.word?.word).filter(Boolean)
+      )];
+
+      saveSession({
+        duration,
+        mode: sessionModeRef.current === "assess" ? "assessment" : "learning",
+        activitiesCompleted: results.length,
+        correct, incorrect,
+        newSoundsIntroduced: newSounds,
+        soundsReviewed: reviewedSounds,
+        wordsTried,
+        results: results.map(r => ({
+          type: r.activity?.type,
+          target: r.activity?.type === "blend" ? r.activity.word?.word : r.activity.phoneme?.grapheme,
+          correct: r.correct,
+        })),
+      });
+    }
+  }, [incrementSessionCount]);
+
   const advanceActivity = useCallback((delay = 500) => {
-    setTimeout(() => {
-      const idx = activityIndexRef.current;
-      const acts = activitiesRef.current;
-      if (idx + 1 < acts.length) {
-        setActivityIndex(idx + 1);
-      } else {
-        endSession();
-      }
-    }, delay);
-  }, [endSession]);
+    if (isAdvancingRef.current) return; // already advancing — ignore duplicate
+    isAdvancingRef.current = true;
+    if (delay <= 0) {
+      doAdvance();
+    } else {
+      setTimeout(doAdvance, delay);
+    }
+  }, [doAdvance]);
 
   const handleActivityResult = useCallback((correct, confusedId) => {
+    if (isAdvancingRef.current) return; // guard against double-call
+
     const activity = activitiesRef.current[activityIndexRef.current];
     if (!activity) return;
     setSessionResults(prev => [...prev, { activity, correct }]);
 
     if (activity.type === "identify" && activity.phoneme) {
       const pid = activity.phoneme.id;
+      const sc = sessionCountRef.current;
+      const sm = sessionModeRef.current;
       updatePhonemeProgress(pid, current => {
         const newStreak = correct ? (current.streak || 0) + 1 : 0;
         const newWrongStreak = correct ? 0 : (current.wrongStreak || 0) + 1;
@@ -268,13 +312,13 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
           correct: (current.correct || 0) + (correct ? 1 : 0),
           incorrect: (current.incorrect || 0) + (correct ? 0 : 1),
           lastSeen: new Date().toISOString(),
-          lastSeenSession: sessionCount || 0,
+          lastSeenSession: sc,
           streak: newStreak,
           wrongStreak: newWrongStreak,
           introduced: true,
           assessments: [
             ...(current.assessments || []).slice(-19),
-            { date: new Date().toISOString(), correct, mode: sessionMode },
+            { date: new Date().toISOString(), correct, mode: sm },
           ],
         };
       });
@@ -289,22 +333,26 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     }
 
     advanceActivity(1200);
-  }, [updatePhonemeProgress, endSession, sessionCount, sessionMode, advanceActivity]);
+  }, [updatePhonemeProgress, advanceActivity]);
 
   const handleIntroComplete = useCallback((phoneme) => {
+    if (isAdvancingRef.current) return; // guard
+
+    const sc = sessionCountRef.current;
     updatePhonemeProgress(phoneme.id, current => ({
       ...current,
       introduced: true,
       mastery: 1,
       box: 1,
       lastSeen: new Date().toISOString(),
-      lastSeenSession: sessionCount || 0,
+      lastSeenSession: sc,
     }));
     advanceActivity(500);
-  }, [updatePhonemeProgress, endSession, sessionCount, advanceActivity]);
+  }, [updatePhonemeProgress, advanceActivity]);
 
   // Manual skip — parent can force advance if stuck
   const skipActivity = useCallback(() => {
+    isAdvancingRef.current = false; // reset guard so skip always works
     advanceActivity(0);
   }, [advanceActivity]);
 

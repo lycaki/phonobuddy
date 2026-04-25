@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
-import { PHONEMES, WORDS } from '../data/phonemes';
+import { PHONEMES, WORDS, CURRICULUM_TIMELINE, getExpectedPosition } from '../data/phonemes';
 import { MASTERY_LEVELS, getMasteryLevel } from '../data/leitner';
 
 export default function QuickSetup({ progress, updatePhonemeProgress, onClose }) {
   const [selectedPhase, setSelectedPhase] = useState(0); // 0 = all
+  const expected = getExpectedPosition();
+  const [targetWeek, setTargetWeek] = useState(expected.week);
 
   const phonemes = useMemo(() => {
     if (selectedPhase === 0) return PHONEMES;
@@ -54,6 +56,24 @@ export default function QuickSetup({ progress, updatePhonemeProgress, onClose })
     });
   }
 
+  // Mark everything up to (and including) a given curriculum week as known
+  function catchUpToWeek(week, level = 5) {
+    const targets = PHONEMES.filter(p => p.week <= week);
+    targets.forEach(p => {
+      updatePhonemeProgress(p.id, prev => ({
+        ...prev,
+        introduced: true,
+        mastery: level,
+        box: level,
+        lastSeen: prev.lastSeen || new Date().toISOString(),
+        lastSeenSession: prev.lastSeenSession || 0,
+      }));
+    });
+  }
+
+  const targetWeekEntry = CURRICULUM_TIMELINE.find(t => t.week === targetWeek) || CURRICULUM_TIMELINE[0];
+  const phonemesUpToTarget = PHONEMES.filter(p => p.week <= targetWeek).length;
+
   // Count decodable words
   const knownIds = new Set(
     Object.entries(progress).filter(([, p]) => p.introduced && (p.mastery || 0) >= 4).map(([id]) => id)
@@ -95,6 +115,53 @@ export default function QuickSetup({ progress, updatePhonemeProgress, onClose })
             {tab.l}
           </button>
         ))}
+      </div>
+
+      {/* CURRICULUM POSITION OVERRIDE */}
+      <div style={{background:"linear-gradient(135deg, #1a3a4a, #1a2744)",borderRadius:14,padding:14,marginBottom:16,border:"2px solid #4ecdc4"}}>
+        <p style={{fontFamily:"'Fredoka'",fontSize:14,color:"#4ecdc4",margin:"0 0 6px"}}>
+          📅 Set Curriculum Position
+        </p>
+        <p style={{fontFamily:"'Andika'",fontSize:11,color:"#a0aec0",margin:"0 0 10px"}}>
+          Mark everything up to a given school week as already learned. Useful if progress reset or to skip ahead.
+        </p>
+
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <span style={{fontFamily:"'Andika'",fontSize:12,color:"#a0aec0",minWidth:40}}>Week:</span>
+          <input
+            type="range" min="1" max="38" value={targetWeek}
+            onChange={e => setTargetWeek(Number(e.target.value))}
+            style={{flex:1,accentColor:"#4ecdc4"}}
+          />
+          <span style={{fontFamily:"'Fredoka'",fontSize:18,color:"#ffd966",minWidth:32,textAlign:"right"}}>{targetWeek}</span>
+        </div>
+
+        <div style={{background:"#0f1729",borderRadius:8,padding:"8px 10px",marginBottom:10}}>
+          <div style={{fontFamily:"'Andika'",fontSize:11,color:"#a0aec0"}}>
+            Week {targetWeek} · {targetWeekEntry.date} · Phase {targetWeekEntry.phase}
+          </div>
+          <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#f0f0f0",marginTop:2}}>
+            {targetWeekEntry.detail}
+          </div>
+          <div style={{fontFamily:"'Andika'",fontSize:11,color:"#7bc67e",marginTop:4}}>
+            → {phonemesUpToTarget} sounds will be marked as known
+          </div>
+        </div>
+
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          <button onClick={() => { setTargetWeek(expected.week); catchUpToWeek(expected.week, 5); }} style={{
+            background:"linear-gradient(135deg, #4ecdc4, #44a08d)",border:"none",borderRadius:10,
+            padding:"10px 14px",fontSize:13,fontFamily:"'Fredoka'",color:"#0f1729",cursor:"pointer",flex:1,
+          }}>
+            🚀 Catch up to today (Week {expected.week})
+          </button>
+          <button onClick={() => catchUpToWeek(targetWeek, 5)} style={{
+            background:"#4ecdc4",border:"none",borderRadius:10,
+            padding:"10px 14px",fontSize:13,fontFamily:"'Fredoka'",color:"#0f1729",cursor:"pointer",
+          }}>
+            ⭐ Mark Week {targetWeek}
+          </button>
+        </div>
       </div>
 
       {/* Batch actions */}

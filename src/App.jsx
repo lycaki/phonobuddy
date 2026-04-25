@@ -18,6 +18,7 @@ import Settings from './components/Settings';
 import WordPractice from './components/WordPractice';
 import SessionHistory from './components/SessionHistory';
 import QuickSetup from './components/QuickSetup';
+import Reading from './components/Reading';
 
 // Context for recordings — so activities can play custom sounds
 export const RecordingsContext = createContext({
@@ -193,6 +194,10 @@ export default function App() {
               </button>
 
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                <button onClick={() => setScreen("reading")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:24}}>📚</div>
+                  <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#f0f0f0",marginTop:4}}>Stories</div>
+                </button>
                 <button onClick={() => setScreen("words")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
                   <div style={{fontSize:24}}>📝</div>
                   <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#f0f0f0",marginTop:4}}>Words</div>
@@ -338,6 +343,8 @@ export default function App() {
               onClose={() => setScreen("home")}
             />
           )}
+
+          {screen === "reading" && <Reading />}
 
           {screen === "settings" && (
             <Settings

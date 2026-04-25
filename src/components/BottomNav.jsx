@@ -1,5 +1,6 @@
 const NAV_ITEMS = [
   { id:"home", icon:"🏠", label:"Home" },
+  { id:"reading", icon:"📚", label:"Stories" },
   { id:"words", icon:"📝", label:"Words" },
   { id:"library", icon:"📖", label:"Sounds" },
   { id:"dashboard", icon:"📊", label:"Progress" },

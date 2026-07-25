@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo, createContext } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { PHONEMES, WORDS } from './data/phonemes';
 import { useProgress } from './hooks/useProgress';
 import { useSession, getCurriculumGap } from './hooks/useSession';
 import { useRecordings } from './hooks/useRecordings';
+import { useYear1Progress } from './hooks/useYear1Progress';
+import { RecordingsContext } from './context/RecordingsContext';
 import { getFamilyCode, setFamilyCode as saveFamilyCode } from './utils/storage';
 import PhonoBuddyOwl from './components/PhonoBuddyOwl';
 import BedTrick from './components/BedTrick';
@@ -20,16 +22,9 @@ import SessionHistory from './components/SessionHistory';
 import QuickSetup from './components/QuickSetup';
 import Reading from './components/Reading';
 import ParentResources from './components/ParentResources';
+import Year1Adventure from './components/year1/Year1Adventure';
 
 // Context for recordings — so activities can play custom sounds
-export const RecordingsContext = createContext({
-  playSound: () => {},
-  saveRecording: () => {},
-  getPlaybackUrl: () => null,
-  hasRecording: () => false,
-  syncStatus: 'idle',
-});
-
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [familyCode, setFamilyCode] = useState(null);
@@ -37,6 +32,7 @@ export default function App() {
 
   const { progress, sessionCount, loaded, updatePhonemeProgress, incrementSessionCount, resetAll, syncToCloud, syncFromCloud, syncStatus } = useProgress(familyCode);
   const recordings = useRecordings(familyCode);
+  const year1 = useYear1Progress(familyCode);
   const session = useSession(progress, updatePhonemeProgress, incrementSessionCount, sessionCount);
 
   // Load family code on mount
@@ -54,6 +50,12 @@ export default function App() {
   function handleSetFamilyCode(code) {
     setFamilyCode(code);
     saveFamilyCode(code);
+  }
+
+  async function handlePullCloud(code) {
+    const recordingCount = await recordings.pullFromCloud(code);
+    await Promise.all([syncFromCloud(code), year1.pullFromCloud(code)]);
+    return recordingCount;
   }
 
   function handleStartSession() {
@@ -78,7 +80,7 @@ export default function App() {
     }
   }, [session.isActive, screen, session.sessionResults.length]);
 
-  if (!loaded) {
+  if (!loaded || !year1.loaded) {
     return (
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"#0f1729"}}>
         <PhonoBuddyOwl size={100} mood="happy" speaking />
@@ -105,7 +107,7 @@ export default function App() {
         {session.showBedTrick && <BedTrick onClose={() => session.setShowBedTrick(false)} />}
 
         {/* Main Content */}
-        <div style={{position:"relative",zIndex:1,maxWidth:600,margin:"0 auto",padding:"16px 20px 100px"}}>
+        <div style={{position:"relative",zIndex:1,maxWidth:screen === "year1" ? 980 : 600,margin:"0 auto",padding:screen === "year1" ? "16px 20px 34px" : "16px 20px 100px"}}>
 
           {/* HOME SCREEN */}
           {screen === "home" && (() => {
@@ -198,8 +200,8 @@ export default function App() {
                 </>
               )}
 
-              <button onClick={handleStartShortSession} style={{background:"linear-gradient(135deg, #4ecdc4, #44a08d)",border:"none",borderRadius:24,padding:"22px 48px",fontSize:24,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 8px 32px rgba(78,205,196,0.3)",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
-                ▶️ Start
+              <button onClick={() => setScreen("year1")} style={{background:"linear-gradient(135deg, #2a91e8, #176cc0)",border:"none",borderBottom:"7px solid #0b4f91",borderRadius:20,padding:"20px 28px",fontSize:23,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 8px 32px rgba(30,120,205,0.32)",display:"block",width:"100%",maxWidth:390,margin:"0 auto 12px"}}>
+                🦖 Year 1 Dino Road Builders
               </button>
 
               <button onClick={() => setShowParentDetails(v => !v)} style={{background:"transparent",border:"2px solid #2a3a5c",borderRadius:14,padding:"10px 24px",fontSize:14,fontFamily:"'Fredoka', sans-serif",color:"#a0aec0",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
@@ -208,6 +210,9 @@ export default function App() {
 
               {showParentDetails && (
                 <div style={{marginBottom:20}}>
+                  <button onClick={handleStartShortSession} style={{background:"linear-gradient(135deg, #4ecdc4, #44a08d)",border:"none",borderRadius:16,padding:"14px 28px",fontSize:17,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
+                    Reception sound practice
+                  </button>
                   <button onClick={handleStartSession} style={{background:"#1a2744",border:"2px solid #4ecdc4",borderRadius:16,padding:"12px 28px",fontSize:16,fontFamily:"'Fredoka', sans-serif",color:"#4ecdc4",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
                     Longer session
                   </button>
@@ -261,6 +266,10 @@ export default function App() {
             </div>
             );
           })()}
+
+          {screen === "year1" && (
+            <Year1Adventure year1={year1} onExit={() => setScreen("home")} />
+          )}
 
           {/* SESSION SCREEN */}
           {screen === "session" && session.sessionActivities.length > 0 && (
@@ -389,7 +398,7 @@ export default function App() {
             <Settings
               familyCode={familyCode}
               onSetFamilyCode={handleSetFamilyCode}
-              onPullFromCloud={recordings.pullFromCloud}
+              onPullFromCloud={handlePullCloud}
               syncStatus={recordings.syncStatus}
               onReset={resetAll}
               progress={progress}
@@ -402,7 +411,7 @@ export default function App() {
         </div>
 
         {/* BOTTOM NAV — hidden during session */}
-        {screen !== "session" && (
+        {screen !== "session" && screen !== "year1" && (
           <BottomNav screen={screen} onNavigate={setScreen} />
         )}
       </div>

@@ -1,8 +1,7 @@
 import { useState, useContext } from 'react';
 import { PHONEMES, WORDS } from '../data/phonemes';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
-import { RecordingsContext } from '../App';
-import { speak } from '../utils/speech';
+import { RecordingsContext } from '../context/RecordingsContext';
 
 export default function SoundLibrary({ progress }) {
   const { playSound, hasRecording } = useContext(RecordingsContext);
@@ -50,7 +49,7 @@ export default function SoundLibrary({ progress }) {
             <p style={{fontFamily:"'Andika'",fontSize:16,color:"#f0f0f0",margin:"8px auto",maxWidth:380}}>{phoneme.hint}</p>
             <p style={{fontFamily:"'Andika'",fontSize:14,color:"#a0aec0",margin:"4px auto 16px",maxWidth:380}}>{phoneme.action}</p>
 
-            <button onClick={() => playSound(phoneme.grapheme)} style={{background:"#ffd966",border:"none",borderRadius:50,width:64,height:64,fontSize:28,cursor:"pointer",boxShadow:"0 4px 16px rgba(255,217,102,0.3)"}}>
+            <button onClick={() => playSound(phoneme.id)} style={{background:"#ffd966",border:"none",borderRadius:50,width:64,height:64,fontSize:28,cursor:"pointer",boxShadow:"0 4px 16px rgba(255,217,102,0.3)"}}>
               🔊
             </button>
 

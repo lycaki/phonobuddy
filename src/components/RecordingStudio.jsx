@@ -1,8 +1,7 @@
 import { useState, useRef, useContext, useMemo } from 'react';
 import { PHONEMES, WORDS } from '../data/phonemes';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
-import { RecordingsContext } from '../App';
-import { speakPhoneme, speak } from '../utils/speech';
+import { RecordingsContext } from '../context/RecordingsContext';
 
 export default function RecordingStudio() {
   const [recording, setRecording] = useState(false);
@@ -14,7 +13,7 @@ export default function RecordingStudio() {
   const mediaRecorder = useRef(null);
   const chunks = useRef([]);
   const timerRef = useRef(null);
-  const { saveRecording, getPlaybackUrl, hasRecording, syncStatus } = useContext(RecordingsContext);
+  const { saveRecording, getPlaybackUrl, hasRecording, playSound, syncStatus } = useContext(RecordingsContext);
 
   const isWord = selectedItem && selectedItem.startsWith("word:");
   const selectedWordObj = isWord ? WORDS.find(w => w.word === selectedItem.slice(5)) : null;

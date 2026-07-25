@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { RecordingsContext } from '../../App';
-import { speak } from '../../utils/speech';
+import { RecordingsContext } from '../../context/RecordingsContext';
 
 export default function IntroduceSound({ phoneme, onComplete }) {
   const [step, setStep] = useState(0);
@@ -11,7 +10,7 @@ export default function IntroduceSound({ phoneme, onComplete }) {
   function next() {
     const nextStep = step + 1;
     setStep(nextStep);
-    if (nextStep === 2) setTimeout(() => playSound(phoneme.grapheme), 500);
+    if (nextStep === 2) setTimeout(() => playSound(phoneme.id), 500);
     if (nextStep === 4) onComplete();
   }
 
@@ -38,7 +37,7 @@ export default function IntroduceSound({ phoneme, onComplete }) {
             <span style={{fontFamily:"'Andika', sans-serif",fontSize:96,color:"white"}}>{phoneme.grapheme}</span>
           </div>
           <p style={{fontFamily:"'Fredoka', sans-serif",fontSize:20,color:"#f0f0f0",maxWidth:400,margin:"12px auto"}}>{phoneme.hint}</p>
-          <button onClick={() => playSound(phoneme.grapheme)} style={{background:"#ffd966",border:"none",borderRadius:50,width:60,height:60,fontSize:28,cursor:"pointer",margin:"8px 8px"}}>🔊</button>
+          <button onClick={() => playSound(phoneme.id)} style={{background:"#ffd966",border:"none",borderRadius:50,width:60,height:60,fontSize:28,cursor:"pointer",margin:"8px 8px"}}>🔊</button>
           <button onClick={next} style={{background:"#4ecdc4",border:"none",borderRadius:16,padding:"14px 32px",fontSize:18,fontFamily:"'Fredoka', sans-serif",color:"#0f1729",cursor:"pointer"}}>Next →</button>
         </div>
       )}

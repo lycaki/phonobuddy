@@ -1,8 +1,7 @@
 import { useState, useContext, useMemo } from 'react';
 import { WORDS, PHONEMES, TRICKY_WORDS } from '../data/phonemes';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
-import { RecordingsContext } from '../App';
-import { speak } from '../utils/speech';
+import { RecordingsContext } from '../context/RecordingsContext';
 
 export default function WordPractice({ progress }) {
   const [selectedPhase, setSelectedPhase] = useState(0); // 0 = all

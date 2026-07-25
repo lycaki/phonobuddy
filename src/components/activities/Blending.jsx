@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import PhonoBuddyOwl from '../PhonoBuddyOwl';
-import { RecordingsContext } from '../../App';
+import { RecordingsContext } from '../../context/RecordingsContext';
 import { PHONEMES } from '../../data/phonemes';
 
 export default function Blending({ word, isAssessment = false, onResult }) {

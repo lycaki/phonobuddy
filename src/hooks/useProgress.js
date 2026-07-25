@@ -76,12 +76,13 @@ export function useProgress(familyCode) {
   }, [familyCode]);
 
   // Pull progress from cloud (call on demand or on join)
-  const syncFromCloud = useCallback(async () => {
-    if (!familyCode || !isFirebaseConfigured()) return false;
+  const syncFromCloud = useCallback(async (codeOverride) => {
+    const code = codeOverride || familyCode;
+    if (!code || !isFirebaseConfigured()) return false;
     setSyncStatus('syncing');
     try {
       const { downloadProgress } = await import('../utils/cloudSync');
-      const remote = await downloadProgress(familyCode);
+      const remote = await downloadProgress(code);
       if (!remote) { setSyncStatus('idle'); return false; }
 
       // Merge: take the higher mastery level for each phoneme

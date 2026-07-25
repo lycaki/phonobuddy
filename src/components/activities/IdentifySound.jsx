@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import PhonoBuddyOwl from '../PhonoBuddyOwl';
-import { RecordingsContext } from '../../App';
+import { RecordingsContext } from '../../context/RecordingsContext';
 import { PHONEMES } from '../../data/phonemes';
 
 export default function IdentifySound({ targetPhoneme, allPhonemes, isAssessment = false, onResult }) {

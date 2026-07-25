@@ -75,6 +75,10 @@ export function useRecordings(familyCode) {
       }
     }
 
+    // These require a reviewed human model. Synthesising the label "schwa" or
+    // guessing voiced th would teach the wrong sound.
+    if (id === 'schwa' || id === 'th_voiced') return false;
+
     // No recording found — use TTS fallback
     if (id.startsWith('word:')) {
       const { speak } = await import('../utils/speech');
@@ -113,8 +117,9 @@ export function useRecordings(familyCode) {
 
   // Cleanup URLs on unmount
   useEffect(() => {
+    const cachedUrls = urlCache.current;
     return () => {
-      Object.values(urlCache.current).forEach(url => URL.revokeObjectURL(url));
+      Object.values(cachedUrls).forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 

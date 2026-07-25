@@ -6,7 +6,6 @@ import { db } from '../utils/storage';
 export default function SessionSummary({ sessionResults, sessionTimer, knownCount, onHome, onDashboard, onAssess, sessionMode, progress }) {
   const [feedbackSaved, setFeedbackSaved] = useState(null);
   const correctCount = sessionResults.filter(r => r.correct).length;
-  const incorrectCount = sessionResults.filter(r => !r.correct).length;
   const newSounds = sessionResults.filter(r => r.activity.type === "introduce").length;
   const totalActivities = sessionResults.length;
   const accuracy = totalActivities > 0 ? Math.round((correctCount / totalActivities) * 100) : 0;

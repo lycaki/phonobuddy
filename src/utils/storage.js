@@ -9,6 +9,14 @@ db.version(2).stores({
   sessions: '++id, date',  // session history log, auto-incrementing ID
 });
 
+db.version(3).stores({
+  progress: 'id',
+  recordings: 'phonemeId',
+  settings: 'key',
+  sessions: '++id, date',
+  attempts: '&eventId, timestamp, profileId, itemId, mode, correct',
+});
+
 // --- Progress ---
 export async function loadAllProgress() {
   const rows = await db.progress.toArray();
@@ -86,4 +94,18 @@ export async function getSessionHistory(limit = 50) {
 
 export async function clearSessionHistory() {
   await db.sessions.clear();
+}
+
+// --- Year 1 append-only attempts ---
+export async function saveAttempt(attempt) {
+  await db.attempts.put(attempt);
+}
+
+export async function saveAttempts(attempts) {
+  if (attempts.length) await db.attempts.bulkPut(attempts);
+}
+
+export async function getAttempts(profileId) {
+  if (!profileId) return db.attempts.orderBy('timestamp').toArray();
+  return db.attempts.where('profileId').equals(profileId).sortBy('timestamp');
 }

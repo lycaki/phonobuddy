@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { STORIES, DIFFICULTIES, getStoriesByDifficulty, getStoryWordCount } from '../data/stories';
 import { PHONEMES, WORDS, TRICKY_WORDS } from '../data/phonemes';
-import { RecordingsContext } from '../App';
+import { RecordingsContext } from '../context/RecordingsContext';
 import { speak } from '../utils/speech';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { db } from '../utils/storage';

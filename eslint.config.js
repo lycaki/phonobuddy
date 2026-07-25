@@ -24,6 +24,9 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Several activity components intentionally reset their local step state
+      // when the routed item changes.
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])

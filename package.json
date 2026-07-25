@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "validate:year1": "node scripts/validate-year1.mjs",
     "generate:monetization": "node scripts/generate-monetization-pack.mjs",
     "lint": "eslint .",
     "preview": "vite preview"

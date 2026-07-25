@@ -37,7 +37,7 @@ function base64ToBlob(base64, mimeType = 'audio/webm') {
 
 // Sanitise recording ID for Firebase path (no dots, brackets, $, #, /)
 function sanitiseKey(id) {
-  return id.replace(/[.#$/\[\]]/g, '_').replace(/:/g, '_');
+  return id.replace(/[.#$/[\]]/g, '_').replace(/:/g, '_');
 }
 
 // Reverse sanitisation: word_sat → word:sat
@@ -179,7 +179,7 @@ export async function uploadProgress(familyCode, progress, sessionCount) {
   const db = await getFirebaseDb();
   if (!db || !familyCode) return;
 
-  const { ref, set } = await import('firebase/database');
+  const { ref, update } = await import('firebase/database');
 
   // Strip blobs/non-serialisable data, keep only progress state
   const cleanProgress = {};
@@ -198,7 +198,9 @@ export async function uploadProgress(familyCode, progress, sessionCount) {
     };
   }
 
-  await set(ref(db, `progress/${familyCode}`), {
+  // Update named children instead of replacing the family root. This preserves
+  // append-only Year 1 attempt events written by other devices.
+  await update(ref(db, `progress/${familyCode}`), {
     phonemes: cleanProgress,
     sessionCount: sessionCount || 0,
     lastSynced: Date.now(),
@@ -242,4 +244,24 @@ export async function uploadSession(familyCode, sessionData) {
     ...sessionData,
     device: navigator.userAgent.slice(0, 50),
   });
+}
+
+// Append-only Year 1 events. The event id makes retries idempotent and prevents
+// one tablet from replacing another tablet's history.
+export async function uploadAttemptEvent(familyCode, event) {
+  const db = await getFirebaseDb();
+  if (!db || !familyCode || !event?.eventId) return;
+
+  const { ref, set } = await import('firebase/database');
+  await set(ref(db, `progress/${familyCode}/attempts/${sanitiseKey(event.eventId)}`), event);
+}
+
+export async function downloadAttemptEvents(familyCode) {
+  const db = await getFirebaseDb();
+  if (!db || !familyCode) return [];
+
+  const { ref, get } = await import('firebase/database');
+  const snapshot = await get(ref(db, `progress/${familyCode}/attempts`));
+  if (!snapshot.exists()) return [];
+  return Object.values(snapshot.val()).filter(event => event?.eventId);
 }

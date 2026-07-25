@@ -1,6 +1,34 @@
-# 🦉 PhonoBuddy
+# PhonoBuddy
 
-A phonics learning app built for Logan (Reception year, age 5) — follows the UK **Little Wandle** curriculum, adapts to where he is, and uses Russell's voice for sound playback.
+A public, tablet-first phonics app built for Logan. The original Reception
+practice and Russell's recordings remain intact; the main child experience is
+now **Year 1 Dino Road Builders**, aligned to a provisional Copnor / Essential
+Letters and Sounds profile for 2026-27.
+
+## Year 1 starting version
+
+- 69 reviewed grapheme-to-phoneme mappings across the public ELS Year 1 order.
+- 72 independently authored real-word items and six parent-review-gated pseudo-words.
+- One block represents one reviewed mapping; mappings can emit a sound sequence.
+- Words are decoded before a vehicle or creature reveal.
+- Creatures are reserved for pseudo-words, matching the screening convention.
+- Pseudo-words remain disabled until a parent reviews and approves the visible bank.
+- Split digraphs use true one-letter transformations such as `hop -> hope`.
+- Dad remains the correctness judge. No ASR or lexical guessing is used.
+- Every attempt is append-only and records presentation time, first touch,
+  verdict and retries. Latency is contextual, not mastery by itself.
+- Parent controls can temporarily select any teaching block for testing.
+
+The profile is `els-copnor-provisional-2026`. It records its programme, version,
+source links, review date and provisional status in
+`src/data/year1Profile.js`. Confirm the school's current programme and teaching
+point in September before changing that status.
+
+Run the content gate with:
+
+```bash
+npm run validate:year1
+```
 
 ---
 
@@ -12,7 +40,7 @@ A phonics learning app built for Logan (Reception year, age 5) — follows the U
 | **GitHub repo** | https://github.com/lycaki/phonobuddy |
 | **Project folder (local)** | `C:\Users\russ\website_phonics\` |
 | **Firebase project** | `phonobuddy-6bf48` ([console](https://console.firebase.google.com/project/phonobuddy-6bf48)) |
-| **Family code (cloud sync)** | `HXN697` |
+| **Family code (cloud sync)** | Stored on the family's devices; not published here |
 
 ---
 
@@ -103,8 +131,8 @@ website_phonics/
 
 ## 🎯 Features
 
-### Core curriculum
-- **48 phonemes** across UK Little Wandle Phases 2, 3, and 4
+### Reception foundation (preserved)
+- **50 GPC entries** across the original Little Wandle-aligned Phases 2, 3, and 4
 - **170+ words** spanning CVC → CCVC → CCVCC → CCCVC patterns
 - **32 tricky words** (the, was, said, etc.) across all phases
 - **Curriculum timeline**: maps every week of Reception year (Sep–Jul) to specific content
@@ -158,7 +186,7 @@ Demotion: 1 wrong drops a level; 3 wrong in a row drops to Level 1.
 - Available from home screen and post-session prompt
 
 ### ☁️ Cloud Sync (Firebase)
-**Family code: `HXN697`** — use it on any device
+Enter the family's existing six-character code in Settings on a new device.
 
 Auto-syncs:
 - ✅ Sound recordings (manual upload, persistent)
@@ -181,7 +209,7 @@ Storage:
 
 | Layer | Tech |
 |-------|------|
-| Framework | React 18 + Vite |
+| Framework | React 19 + Vite |
 | State | React hooks + Context API |
 | Local storage | IndexedDB (via Dexie) |
 | Cloud storage | Firebase Realtime Database (Spark/free plan) |
@@ -197,7 +225,11 @@ Storage:
 
 The Firebase API key is **public by design** for web apps — security comes from the Realtime Database rules. Configured in `src/utils/firebase.js`.
 
-**Database rules** (locked down to family-code paths only):
+**Current database rules:** the family-code paths are publicly readable and
+writable. A family code is an identifier, not authentication. The app now uses
+timestamp-safe recording merges and append-only Year 1 events to reduce
+accidental overwrites, but this is not a security boundary. Do not describe the
+current Firebase data as private until authenticated family access is added.
 ```json
 {
   "rules": {
@@ -259,7 +291,7 @@ In the app: **📊 Progress** → scroll to session history at the bottom
 ## 📝 Common workflows
 
 ### Logan's progress reset (everything wiped)
-1. Open app → Settings → enter `HXN697` → Join → recordings + progress sync down
+1. Open app → Settings → enter the existing family code → Join → recordings + progress sync down
 2. If only progress is gone: ⚡ Quick Setup → 🚀 Catch up to today
 3. Done — back where he should be
 

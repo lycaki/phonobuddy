@@ -6,8 +6,6 @@ import PhonoBuddyOwl from './PhonoBuddyOwl';
 export default function Dashboard({ progress, sessionCount }) {
   const gap = getCurriculumGap(progress);
   const introduced = gap.introduced;
-  const mastered = PHONEMES.filter(p => (progress[p.id]?.mastery || 0) >= 5);
-  const learning = introduced.filter(p => (progress[p.id]?.mastery || 0) >= 3 && (progress[p.id]?.mastery || 0) < 5);
   const struggling = gap.struggling;
 
   const bdErrors = Object.values(progress).reduce((sum, p) => {

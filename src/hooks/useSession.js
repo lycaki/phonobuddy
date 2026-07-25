@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { PHONEMES, WORDS, getExpectedPosition } from '../data/phonemes';
-import { shouldAppearInSession, calculateNewLevel, getMasteryLevel, MASTERY_LEVELS } from '../data/leitner';
+import { shouldAppearInSession, calculateNewLevel, MASTERY_LEVELS } from '../data/leitner';
 import { saveSession } from '../utils/storage';
 
 // ─── GAP ANALYSIS ───
@@ -54,7 +54,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   const [sessionResults, setSessionResults] = useState([]);
   const [sessionTimer, setSessionTimer] = useState(0);
   const [showBedTrick, setShowBedTrick] = useState(false);
-  const [bdErrorCount, setBdErrorCount] = useState(0);
+  const [_bdErrorCount, setBdErrorCount] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [sessionMode, setSessionMode] = useState("learn"); // "learn" or "assess"
   const timerRef = useRef(null);

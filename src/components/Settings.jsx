@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import FamilyCode from './FamilyCode';
-import { db, getAllRecordingIds, getRecordingBlob, saveRecordingBlob } from '../utils/storage';
+import { db, getAllRecordingIds, getRecordingBlob, getRecordingRecord, saveRecordingBlob } from '../utils/storage';
 import { PHONEMES } from '../data/phonemes';
 import { MASTERY_LEVELS } from '../data/leitner';
 
@@ -27,11 +27,12 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
       // Create a JSON manifest + base64 audio blobs
       const manifest = { version: 1, date: new Date().toISOString(), recordings: {} };
       for (const id of ids) {
-        const blob = await getRecordingBlob(id);
+        const record = await getRecordingRecord(id);
+        const blob = record?.blob || await getRecordingBlob(id);
         if (blob) {
           const buffer = await blob.arrayBuffer();
           const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-          manifest.recordings[id] = { type: blob.type, data: base64 };
+          manifest.recordings[id] = { type: blob.type, data: base64, timestamp: record?.timestamp || 0 };
         }
       }
 
@@ -75,7 +76,7 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
           const bytes = new Uint8Array(binary.length);
           for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
           const blob = new Blob([bytes], { type: rec.type || 'audio/webm' });
-          await saveRecordingBlob(id, blob);
+          await saveRecordingBlob(id, blob, rec.timestamp || 0);
           restored++;
         }
 
@@ -132,7 +133,7 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
   }
 
   async function clearRecordings() {
-    if (!confirm("Delete all recorded sounds? Make sure you've backed up first!")) return;
+    if (!confirm("Delete recorded sounds on this device only? Cloud/iPad recordings are not deleted. Make sure you've backed up first!")) return;
     await db.recordings.clear();
     setCleared('recordings');
     window.location.reload();
@@ -145,7 +146,7 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
   }
 
   async function clearEverything() {
-    if (!confirm("WIPE EVERYTHING? Progress, recordings, history, family code — all gone. Have you backed up?")) return;
+    if (!confirm("WIPE EVERYTHING on this device only? Progress, local recordings, history, and family code on this browser will be removed. Cloud/iPad recordings are not deleted. Have you backed up?")) return;
     await db.progress.clear();
     await db.recordings.clear();
     await db.sessions.clear();
@@ -265,7 +266,7 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
       <div style={{padding:16,background:"#1a2744",borderRadius:16}}>
         <h3 style={{fontFamily:"'Fredoka'",fontSize:16,color:"#f4a261",margin:"0 0 12px"}}>Reset Options</h3>
         <p style={{fontFamily:"'Andika'",fontSize:13,color:"#a0aec0",margin:"0 0 12px"}}>
-          Use these for testing or to start fresh. <strong style={{color:"#f4a261"}}>Back up first!</strong>
+          Use these for testing or to start fresh on this device only. They do not delete recordings from the cloud or other devices. <strong style={{color:"#f4a261"}}>Back up first!</strong>
         </p>
 
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -276,10 +277,10 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
             Clear session history <span style={{color:"#a0aec0",fontSize:12}}>— removes the session log</span>
           </button>
           <button onClick={clearRecordings} style={{background:"transparent",border:"1px solid #2a3a5c",borderRadius:10,padding:"10px 16px",fontSize:14,color:"#e88d8d",cursor:"pointer",fontFamily:"'Andika'",textAlign:"left"}}>
-            Delete all recordings <span style={{color:"#a0aec0",fontSize:12}}>— removes local audio files</span>
+            Delete all recordings <span style={{color:"#a0aec0",fontSize:12}}>— removes local audio files on this device only</span>
           </button>
           <button onClick={clearEverything} style={{background:"#2a1010",border:"2px solid #e88d8d",borderRadius:10,padding:"12px 16px",fontSize:14,color:"#e88d8d",cursor:"pointer",fontFamily:"'Fredoka'",textAlign:"left"}}>
-            WIPE EVERYTHING <span style={{color:"#a0aec0",fontSize:12}}>— total reset for testing</span>
+            WIPE EVERYTHING <span style={{color:"#a0aec0",fontSize:12}}>— local reset for testing</span>
           </button>
         </div>
 

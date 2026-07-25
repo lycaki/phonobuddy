@@ -128,7 +128,7 @@ export function useProgress(familyCode) {
   const resetAll = useCallback(async () => {
     const { db } = await import('../utils/storage');
     await db.progress.clear();
-    await db.settings.clear();
+    await db.settings.delete('sessionCount');
     setProgress({});
     setSessionCount(0);
   }, []);

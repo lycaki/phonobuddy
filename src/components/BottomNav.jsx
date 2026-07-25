@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { id:"words", icon:"📝", label:"Words" },
   { id:"library", icon:"📖", label:"Sounds" },
   { id:"dashboard", icon:"📊", label:"Progress" },
+  { id:"resources", icon:"$", label:"Resources" },
   { id:"settings", icon:"⚙️", label:"Settings" },
 ];
 

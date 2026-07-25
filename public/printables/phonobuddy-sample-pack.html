@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhonoBuddy Reception Phonics Starter Pack</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #172033;
+      background: #f7f3ea;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.35;
+    }
+    .page {
+      min-height: 268mm;
+      page-break-after: always;
+      padding: 8mm;
+      background: #fffdf7;
+      border: 1px solid #e3d8c4;
+    }
+    .page:last-child { page-break-after: auto; }
+    h1, h2, h3 { margin: 0; color: #172033; }
+    h1 { font-size: 34px; letter-spacing: 0; }
+    h2 { font-size: 24px; margin-bottom: 12px; }
+    h3 { font-size: 16px; margin-bottom: 8px; }
+    p { margin: 0 0 10px; }
+    .muted { color: #667085; }
+    .small { font-size: 11px; }
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+      background: linear-gradient(135deg, #fff7df 0%, #eaf7f5 100%);
+      border: 2px solid #172033;
+    }
+    .cover-badge {
+      display: inline-block;
+      width: fit-content;
+      padding: 8px 12px;
+      border: 2px solid #172033;
+      border-radius: 999px;
+      background: #ffd966;
+      font-weight: 700;
+    }
+    .cover-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 26px;
+    }
+    .cover-tile {
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #172033;
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .routine {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .box {
+      border: 1px solid #d9ccba;
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
+    }
+    .sound-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+    }
+    .sound-card {
+      min-height: 74px;
+      border: 2px solid #172033;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      break-inside: avoid;
+    }
+    .sound-main {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .sound-meta {
+      font-size: 10px;
+      color: #667085;
+    }
+    .word-ladder {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .word-ladder td, .word-ladder th {
+      border: 1px solid #d9ccba;
+      padding: 8px;
+      text-align: center;
+      font-size: 18px;
+    }
+    .word-ladder th {
+      background: #eaf7f5;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .trace-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #e5ddcf;
+      padding: 10px 0;
+    }
+    .trace-word {
+      font-size: 30px;
+      font-weight: 800;
+    }
+    .trace-lines {
+      height: 38px;
+      background:
+        linear-gradient(to bottom, transparent 0 31px, #aeb7c4 31px 32px, transparent 32px),
+        repeating-linear-gradient(to right, transparent 0 22px, rgba(23,32,51,0.12) 22px 23px);
+    }
+    .tracker {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    .tracker th, .tracker td {
+      border: 1px solid #cfc4b4;
+      height: 30px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .tracker th { background: #fff1c7; }
+    .cutline { border-top: 1px dashed #8a94a6; margin: 10px 0; }
+    .footer {
+      margin-top: 14px;
+      color: #667085;
+      font-size: 10px;
+    }
+    @media screen {
+      body { padding: 24px; }
+      .page {
+        max-width: 794px;
+        margin: 0 auto 24px;
+        box-shadow: 0 20px 60px rgba(23,32,51,0.14);
+      }
+    }
+  </style>
+</head>
+<body>
+  
+    <section class="page cover">
+      <div>
+        <div class="cover-badge">Free sample</div>
+        <h1 style="margin-top: 28px;">PhonoBuddy Reception Phonics Starter Pack</h1>
+        <p style="font-size: 18px; max-width: 560px; margin-top: 14px;">
+          Short, practical worksheets for daily sound recognition, blending, tricky words, and parent-led practice.
+        </p>
+        <div class="cover-grid"><div class="cover-tile">s</div><div class="cover-tile">a</div><div class="cover-tile">t</div><div class="cover-tile">p</div><div class="cover-tile">i</div><div class="cover-tile">n</div><div class="cover-tile">m</div><div class="cover-tile">d</div><div class="cover-tile">g</div><div class="cover-tile">o</div><div class="cover-tile">c</div><div class="cover-tile">k</div><div class="cover-tile">ck</div><div class="cover-tile">e</div><div class="cover-tile">u</div><div class="cover-tile">r</div><div class="cover-tile">h</div><div class="cover-tile">b</div></div>
+      </div>
+      <div>
+        <p><strong>Includes:</strong> sound cards, blending ladders, word tracing, tricky word practice, and a 14-day routine.</p>
+        <p class="muted small">Original PhonoBuddy resource. Designed for adult-supported Reception phonics practice.</p>
+      </div>
+    </section>
+  
+
+    <section class="page">
+      <h2>How to use this pack</h2>
+      <p>Use one short page at a time. Five calm minutes is better than a long session that becomes hard work.</p>
+      <div class="routine">
+        <div class="box"><h3>1. Say the sound</h3><p>Point to one card. Say the pure sound, then ask the child to repeat it.</p></div>
+        <div class="box"><h3>2. Find it</h3><p>Ask the child to find the same grapheme in a word ladder or sentence.</p></div>
+        <div class="box"><h3>3. Blend it</h3><p>Touch each sound from left to right, then sweep across and read the word.</p></div>
+        <div class="box"><h3>4. Keep it light</h3><p>Stop while it is still going well. Put a tick in the tracker and come back tomorrow.</p></div>
+      </div>
+      <h2 style="margin-top: 24px;">14-day practice tracker</h2>
+      <table class="tracker">
+        <tr><th>Day</th><th>Sound</th><th>Words</th><th>Tricky word</th><th>Adult note</th></tr>
+        <tr><td>1</td><td></td><td></td><td></td><td></td></tr><tr><td>2</td><td></td><td></td><td></td><td></td></tr><tr><td>3</td><td></td><td></td><td></td><td></td></tr><tr><td>4</td><td></td><td></td><td></td><td></td></tr><tr><td>5</td><td></td><td></td><td></td><td></td></tr><tr><td>6</td><td></td><td></td><td></td><td></td></tr><tr><td>7</td><td></td><td></td><td></td><td></td></tr><tr><td>8</td><td></td><td></td><td></td><td></td></tr><tr><td>9</td><td></td><td></td><td></td><td></td></tr><tr><td>10</td><td></td><td></td><td></td><td></td></tr><tr><td>11</td><td></td><td></td><td></td><td></td></tr><tr><td>12</td><td></td><td></td><td></td><td></td></tr><tr><td>13</td><td></td><td></td><td></td><td></td></tr><tr><td>14</td><td></td><td></td><td></td><td></td></tr>
+      </table>
+      <p class="footer">Tip: If a word is hard, return to the sound cards. Confidence comes from small repetitions.</p>
+    </section>
+  
+
+    <section class="page">
+      <h2>Sample Phase 2 sound cards</h2>
+      <div class="sound-grid">
+        
+          <div class="sound-card">
+            <div class="sound-main">s</div>
+            <div class="sound-meta">sss  like a snake hissing</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">a</div>
+            <div class="sound-meta">ah  like biting an apple</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">t</div>
+            <div class="sound-meta">t  a quick tap sound, NOT &#39;tuh&#39;</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">p</div>
+            <div class="sound-meta">p  a tiny puff of air, NOT &#39;puh&#39;</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">i</div>
+            <div class="sound-meta">ih  short sharp sound like &#39;itch&#39;</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">n</div>
+            <div class="sound-meta">nnn  hum through your nose</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">m</div>
+            <div class="sound-meta">mmm  lips together, hum</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">d</div>
+            <div class="sound-meta">d  quick tap of tongue behind teeth, NOT &#39;duh&#39;</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">g</div>
+            <div class="sound-meta">g  gurgle in throat, NOT &#39;guh&#39;</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">o</div>
+            <div class="sound-meta">o  round mouth, short sound</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">c</div>
+            <div class="sound-meta">c  click at back of throat, NOT &#39;cuh&#39;</div>
+          </div>
+        
+          <div class="sound-card">
+            <div class="sound-main">k</div>
+            <div class="sound-meta">k  same as c, click at back of throat</div>
+          </div>
+        
+      </div>
+      <p class="footer">Cut these cards out or leave the page whole for quick pointing practice.</p>
+    </section>
+  
+
+    <section class="page">
+      <h2>Sample blending ladders</h2>
+      <p>Touch each sound, then blend smoothly across the word.</p>
+      <table class="word-ladder">
+        <tr><th>Word 1</th><th>Word 2</th><th>Word 3</th><th>Word 4</th></tr>
+        
+          <tr>
+            <td><strong>sat</strong><br><span class="small muted">s - a - t</span></td><td><strong>tap</strong><br><span class="small muted">t - a - p</span></td><td><strong>pat</strong><br><span class="small muted">p - a - t</span></td><td><strong>sip</strong><br><span class="small muted">s - i - p</span></td>
+          </tr>
+        
+          <tr>
+            <td><strong>sit</strong><br><span class="small muted">s - i - t</span></td><td><strong>pin</strong><br><span class="small muted">p - i - n</span></td><td><strong>tip</strong><br><span class="small muted">t - i - p</span></td><td><strong>nap</strong><br><span class="small muted">n - a - p</span></td>
+          </tr>
+        
+          <tr>
+            <td><strong>man</strong><br><span class="small muted">m - a - n</span></td><td><strong>map</strong><br><span class="small muted">m - a - p</span></td><td><strong>dig</strong><br><span class="small muted">d - i - g</span></td><td><strong>dad</strong><br><span class="small muted">d - a - d</span></td>
+          </tr>
+        
+          <tr>
+            <td><strong>pig</strong><br><span class="small muted">p - i - g</span></td><td><strong>dog</strong><br><span class="small muted">d - o - g</span></td><td><strong>got</strong><br><span class="small muted">g - o - t</span></td><td><strong>pot</strong><br><span class="small muted">p - o - t</span></td>
+          </tr>
+        
+          <tr>
+            <td><strong>cat</strong><br><span class="small muted">c - a - t</span></td><td><strong>cap</strong><br><span class="small muted">c - a - p</span></td><td><strong>kid</strong><br><span class="small muted">k - i - d</span></td><td><strong>kit</strong><br><span class="small muted">k - i - t</span></td>
+          </tr>
+        
+      </table>
+    </section>
+  
+
+    <section class="page">
+      <h2>Sample word writing</h2>
+      <p>Read the word, say it in a sentence, then write it on the line.</p>
+      
+        <div class="trace-row">
+          <div class="trace-word">sat</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div class="trace-word">tap</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div class="trace-word">pat</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div class="trace-word">sip</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div class="trace-word">sit</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div class="trace-word">pin</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div class="trace-word">tip</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div class="trace-word">nap</div>
+          <div class="trace-lines"></div>
+        </div>
+      
+    </section>
+  
+
+    <section class="page">
+      <h2>Tricky word practice</h2>
+      <p>Read the word. Cover it. Write it. Check it. Circle the part that does not behave as expected.</p>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">the</div>
+            <div class="small muted">Tricky part: e</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">to</div>
+            <div class="small muted">Tricky part: o</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">I</div>
+            <div class="small muted">Tricky part: I</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">no</div>
+            <div class="small muted">Tricky part: o</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">go</div>
+            <div class="small muted">Tricky part: o</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">into</div>
+            <div class="small muted">Tricky part: o</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">he</div>
+            <div class="small muted">Tricky part: e</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">she</div>
+            <div class="small muted">Tricky part: e</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">we</div>
+            <div class="small muted">Tricky part: e</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">me</div>
+            <div class="small muted">Tricky part: e</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">be</div>
+            <div class="small muted">Tricky part: e</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">was</div>
+            <div class="small muted">Tricky part: a</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">you</div>
+            <div class="small muted">Tricky part: you</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">they</div>
+            <div class="small muted">Tricky part: ey</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">all</div>
+            <div class="small muted">Tricky part: a</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+        <div class="trace-row">
+          <div>
+            <div class="trace-word">are</div>
+            <div class="small muted">Tricky part: are</div>
+          </div>
+          <div class="trace-lines"></div>
+        </div>
+      
+    </section>
+  
+</body>
+</html>

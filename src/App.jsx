@@ -19,6 +19,7 @@ import WordPractice from './components/WordPractice';
 import SessionHistory from './components/SessionHistory';
 import QuickSetup from './components/QuickSetup';
 import Reading from './components/Reading';
+import ParentResources from './components/ParentResources';
 
 // Context for recordings — so activities can play custom sounds
 export const RecordingsContext = createContext({
@@ -32,6 +33,7 @@ export const RecordingsContext = createContext({
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [familyCode, setFamilyCode] = useState(null);
+  const [showParentDetails, setShowParentDetails] = useState(false);
 
   const { progress, sessionCount, loaded, updatePhonemeProgress, incrementSessionCount, resetAll, syncToCloud, syncFromCloud, syncStatus } = useProgress(familyCode);
   const recordings = useRecordings(familyCode);
@@ -56,6 +58,11 @@ export default function App() {
 
   function handleStartSession() {
     session.startSession();
+    setScreen("session");
+  }
+
+  function handleStartShortSession() {
+    session.startSession({ length: "short" });
     setScreen("session");
   }
 
@@ -103,7 +110,6 @@ export default function App() {
           {/* HOME SCREEN */}
           {screen === "home" && (() => {
             const mastered = PHONEMES.filter(p => progress[p.id]?.box >= 4 && progress[p.id]?.correct > 5).length;
-            const totalCorrect = Object.values(progress).reduce((s, p) => s + (p.correct || 0), 0);
             const greetings = [
               "Ready to discover some sounds?",
               "Let's learn together!",
@@ -123,6 +129,17 @@ export default function App() {
               <h1 style={{fontFamily:"'Fredoka', sans-serif",fontSize:38,color:"#ffd966",margin:"12px 0 4px",letterSpacing:1}}>PhonoBuddy</h1>
               <p style={{fontFamily:"'Andika'",fontSize:16,color:"#a0aec0",margin:"0 0 16px"}}>{greeting}</p>
 
+              <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
+                <span style={{fontFamily:"'Fredoka'",fontSize:14,color:"#ffd966",background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:999,padding:"6px 12px"}}>
+                  ⭐ {knownPhonemes.length} sounds
+                </span>
+                <span style={{fontFamily:"'Fredoka'",fontSize:14,color:"#4ecdc4",background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:999,padding:"6px 12px"}}>
+                  📚 {gap.decodableWords.length} words
+                </span>
+              </div>
+
+              {showParentDetails && (
+                <>
               {/* Catch-up status banner */}
               {gap.soundsBehind > 0 && (
                 <div style={{background: gap.catchUpMode === "significant-gap" ? "#3a1a1a" : gap.catchUpMode === "behind" ? "#3a2a10" : "#1a2744", border:`2px solid ${gap.catchUpMode === "significant-gap" ? "#e88d8d" : gap.catchUpMode === "behind" ? "#f4a261" : "#4ecdc4"}`, borderRadius:16, padding:16, marginBottom:16, textAlign:"left"}}>
@@ -178,20 +195,34 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-              <button onClick={handleStartSession} style={{background:"linear-gradient(135deg, #4ecdc4, #44a08d)",border:"none",borderRadius:24,padding:"22px 48px",fontSize:24,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 8px 32px rgba(78,205,196,0.3)",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
-                ▶️ Start Session
-              </button>
-
-              {knownPhonemes.length > 0 && (
-                <button onClick={handleStartAssessment} style={{background:"linear-gradient(135deg, #b088f9, #7c5cbf)",border:"none",borderRadius:20,padding:"14px 36px",fontSize:18,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 6px 24px rgba(176,136,249,0.3)",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
-                  📋 Test Logan
-                </button>
+                </>
               )}
 
-              <button onClick={() => setScreen("quicksetup")} style={{background:"transparent",border:"2px solid #f4a261",borderRadius:16,padding:"10px 24px",fontSize:14,fontFamily:"'Fredoka', sans-serif",color:"#f4a261",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto 20px"}}>
-                ⚡ Quick Setup — mark sounds as known
+              <button onClick={handleStartShortSession} style={{background:"linear-gradient(135deg, #4ecdc4, #44a08d)",border:"none",borderRadius:24,padding:"22px 48px",fontSize:24,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 8px 32px rgba(78,205,196,0.3)",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
+                ▶️ Start
               </button>
+
+              <button onClick={() => setShowParentDetails(v => !v)} style={{background:"transparent",border:"2px solid #2a3a5c",borderRadius:14,padding:"10px 24px",fontSize:14,fontFamily:"'Fredoka', sans-serif",color:"#a0aec0",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
+                {showParentDetails ? "Hide parent view" : "Parent view"}
+              </button>
+
+              {showParentDetails && (
+                <div style={{marginBottom:20}}>
+                  <button onClick={handleStartSession} style={{background:"#1a2744",border:"2px solid #4ecdc4",borderRadius:16,padding:"12px 28px",fontSize:16,fontFamily:"'Fredoka', sans-serif",color:"#4ecdc4",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
+                    Longer session
+                  </button>
+
+                  {knownPhonemes.length > 0 && (
+                    <button onClick={handleStartAssessment} style={{background:"linear-gradient(135deg, #b088f9, #7c5cbf)",border:"none",borderRadius:20,padding:"14px 36px",fontSize:18,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 6px 24px rgba(176,136,249,0.3)",display:"block",width:"100%",maxWidth:340,margin:"0 auto 12px"}}>
+                      📋 Test Logan
+                    </button>
+                  )}
+
+                  <button onClick={() => setScreen("quicksetup")} style={{background:"transparent",border:"2px solid #f4a261",borderRadius:16,padding:"10px 24px",fontSize:14,fontFamily:"'Fredoka', sans-serif",color:"#f4a261",cursor:"pointer",display:"block",width:"100%",maxWidth:340,margin:"0 auto"}}>
+                    ⚡ Quick Setup — mark sounds as known
+                  </button>
+                </div>
+              )}
 
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 <button onClick={() => setScreen("reading")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
@@ -221,6 +252,10 @@ export default function App() {
                 <button onClick={() => setScreen("settings")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
                   <div style={{fontSize:24}}>⚙️</div>
                   <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#f0f0f0",marginTop:4}}>Settings</div>
+                </button>
+                <button onClick={() => setScreen("resources")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:24}}>$</div>
+                  <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#f0f0f0",marginTop:4}}>Resources</div>
                 </button>
               </div>
             </div>
@@ -274,6 +309,7 @@ export default function App() {
                     key={`id-${session.activityIndex}`}
                     targetPhoneme={session.sessionActivities[session.activityIndex].phoneme}
                     allPhonemes={knownPhonemes.length >= 4 ? knownPhonemes : PHONEMES.slice(0, 4)}
+                    isAssessment={session.sessionMode === "assess" || session.sessionActivities[session.activityIndex].isAssessment}
                     onResult={session.handleActivityResult}
                   />
                 )}
@@ -288,6 +324,7 @@ export default function App() {
                   <Blending
                     key={`blend-${session.activityIndex}`}
                     word={session.sessionActivities[session.activityIndex].word}
+                    isAssessment={session.sessionMode === "assess" || session.sessionActivities[session.activityIndex].isAssessment}
                     onResult={(correct) => session.handleActivityResult(correct)}
                   />
                 )}
@@ -344,7 +381,9 @@ export default function App() {
             />
           )}
 
-          {screen === "reading" && <Reading />}
+          {screen === "reading" && <Reading progress={progress} />}
+
+          {screen === "resources" && <ParentResources />}
 
           {screen === "settings" && (
             <Settings

@@ -1,14 +1,33 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { MASTERY_LEVELS, getMasteryLevel } from '../data/leitner';
+import { db } from '../utils/storage';
 
 export default function SessionSummary({ sessionResults, sessionTimer, knownCount, onHome, onDashboard, onAssess, sessionMode, progress }) {
+  const [feedbackSaved, setFeedbackSaved] = useState(null);
   const correctCount = sessionResults.filter(r => r.correct).length;
   const incorrectCount = sessionResults.filter(r => !r.correct).length;
   const newSounds = sessionResults.filter(r => r.activity.type === "introduce").length;
   const totalActivities = sessionResults.length;
   const accuracy = totalActivities > 0 ? Math.round((correctCount / totalActivities) * 100) : 0;
   const isAssessment = sessionMode === "assess";
+
+  async function saveSessionFeedback(value) {
+    const row = await db.settings.get('sessionFeedback');
+    const entries = row?.value || [];
+    const next = [
+      ...entries.slice(-49),
+      {
+        value,
+        date: new Date().toISOString(),
+        mode: isAssessment ? "assessment" : "learning",
+        accuracy,
+        duration: sessionTimer,
+      },
+    ];
+    await db.settings.put({ key: 'sessionFeedback', value: next });
+    setFeedbackSaved(value);
+  }
 
   // Build mastery change report for assessment
   const masteryChanges = useMemo(() => {
@@ -120,6 +139,33 @@ export default function SessionSummary({ sessionResults, sessionTimer, knownCoun
           : `Great work! ${knownCount} sounds discovered so far.`
         }
       </p>
+
+      {!isAssessment && (
+        <div style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:14,margin:"0 auto 24px",maxWidth:480}}>
+          <p style={{fontFamily:"'Fredoka'",fontSize:15,color:"#ffd966",margin:"0 0 10px"}}>How did that feel?</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:8}}>
+            {[
+              { id:"too_easy", label:"Too easy" },
+              { id:"just_right", label:"Just right" },
+              { id:"too_hard", label:"Too hard" },
+              { id:"tired", label:"Tired" },
+            ].map(item => (
+              <button key={item.id} onClick={() => saveSessionFeedback(item.id)} style={{
+                background: feedbackSaved === item.id ? "#4ecdc4" : "#0f1729",
+                border:`2px solid ${feedbackSaved === item.id ? "#4ecdc4" : "#2a3a5c"}`,
+                borderRadius:12,
+                padding:"10px 8px",
+                fontFamily:"'Fredoka'",
+                fontSize:14,
+                color: feedbackSaved === item.id ? "#0f1729" : "#f0f0f0",
+                cursor:"pointer",
+              }}>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Action buttons */}
       <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>

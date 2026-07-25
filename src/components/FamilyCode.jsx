@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generateFamilyCode, uploadAllRecordings } from '../utils/cloudSync';
 import { isFirebaseConfigured } from '../utils/firebase';
-import { getAllRecordingIds, getRecordingBlob } from '../utils/storage';
+import { getAllRecordingIds, getRecordingBlob, getRecordingRecord } from '../utils/storage';
 
 export default function FamilyCode({ familyCode, onSetCode, onPullFromCloud, syncStatus }) {
   const [joinCode, setJoinCode] = useState('');
@@ -45,7 +45,8 @@ export default function FamilyCode({ familyCode, onSetCode, onPullFromCloud, syn
         familyCode,
         getAllRecordingIds,
         getRecordingBlob,
-        (done, total) => setUploadProgress({ done, total })
+        (done, total) => setUploadProgress({ done, total }),
+        getRecordingRecord
       );
       setUploadProgress({ done: count, total: count, complete: true });
     } catch (e) {

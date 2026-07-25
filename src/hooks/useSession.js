@@ -83,14 +83,15 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   // NOTE: activitiesRef and activityIndexRef are updated SYNCHRONOUSLY below
 
   // ─── START LEARNING SESSION ───
-  const startSession = useCallback(() => {
+  const startSession = useCallback((options = {}) => {
+    const isShort = options.length === "short";
     const activities = [];
     const gap = getCurriculumGap(progress);
     const introducedIds = new Set(Object.entries(progress).filter(([, p]) => p.introduced).map(([id]) => id));
 
     // ── 1. WARM-UP: 2 mastered sounds (level 4-5) ──
     const mastered = PHONEMES.filter(p => (progress[p.id]?.mastery || 0) >= 4 && progress[p.id]?.introduced);
-    mastered.sort(() => Math.random() - 0.5).slice(0, 2).forEach(p => {
+    mastered.sort(() => Math.random() - 0.5).slice(0, isShort ? 1 : 2).forEach(p => {
       activities.push({ type: "identify", phoneme: p });
     });
 
@@ -100,7 +101,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
       return prog?.introduced && (prog.mastery || 0) <= 2;
     }).sort((a, b) => (progress[a.id]?.mastery || 0) - (progress[b.id]?.mastery || 0));
 
-    level1and2.slice(0, 4).forEach(p => {
+    level1and2.slice(0, isShort ? 1 : 4).forEach(p => {
       activities.push({ type: "identify", phoneme: p });
       // Level 1 gets shown twice
       if ((progress[p.id]?.mastery || 0) === 1) {
@@ -114,7 +115,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
       return prog?.introduced && prog.mastery === 3 &&
         shouldAppearInSession(3, sessionCount || 0, prog.lastSeenSession);
     });
-    level3.sort(() => Math.random() - 0.5).slice(0, 2).forEach(p => {
+    level3.sort(() => Math.random() - 0.5).slice(0, isShort ? 1 : 2).forEach(p => {
       activities.push({ type: "identify", phoneme: p });
     });
 
@@ -124,14 +125,14 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
       return prog?.introduced && prog.mastery === 4 &&
         shouldAppearInSession(4, sessionCount || 0, prog.lastSeenSession);
     });
-    level4.sort(() => Math.random() - 0.5).slice(0, 1).forEach(p => {
+    level4.sort(() => Math.random() - 0.5).slice(0, isShort ? 0 : 1).forEach(p => {
       activities.push({ type: "identify", phoneme: p });
     });
 
     // ── 5. CATCH-UP: New sounds ──
     const toIntroduce = gap.missingPhonemes
       .sort((a, b) => a.phase - b.phase || a.week - b.week || a.set - b.set)
-      .slice(0, gap.catchUpRate);
+      .slice(0, isShort ? Math.min(1, gap.catchUpRate) : gap.catchUpRate);
 
     toIntroduce.forEach(p => {
       activities.push({ type: "introduce", phoneme: p });
@@ -148,7 +149,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     const blendWords = [
       ...wordsWithNewSounds.sort(() => Math.random() - 0.5).slice(0, 2),
       ...otherWords.sort(() => Math.random() - 0.5).slice(0, 2),
-    ].slice(0, 3);
+    ].slice(0, isShort ? 2 : 3);
     blendWords.forEach(w => activities.push({ type: "blend", word: w }));
 
     // ── FIRST SESSION BOOTSTRAP ──

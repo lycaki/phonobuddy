@@ -3,6 +3,22 @@
 // Phase 2: Weeks 1-6 (Sep-Oct) — 23 GPCs
 // Phase 3: Weeks 7-24 (Nov-Mar) — 25 new GPCs (total 48)
 // Phase 4: Weeks 25-38 (Apr-Jul) — no new GPCs, consonant clusters
+const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+const RECEPTION_START = new Date(2025, 8, 1); // 1 September 2025
+
+// Approximate school holiday weeks for the 2025/26 Reception year.
+// These weeks do not advance the curriculum position, so the app does not
+// over-report catch-up work after half terms, Christmas, Easter, or May break.
+export const SCHOOL_BREAK_WEEKS = [
+  { start: "2025-10-27", label: "Autumn half term" },
+  { start: "2025-12-22", label: "Christmas break" },
+  { start: "2025-12-29", label: "Christmas break" },
+  { start: "2026-02-16", label: "Spring half term" },
+  { start: "2026-03-30", label: "Easter break" },
+  { start: "2026-04-06", label: "Easter break" },
+  { start: "2026-05-25", label: "Summer half term" },
+];
+
 export const CURRICULUM_TIMELINE = [
   { week:1,  phase:2, detail:"Set 1: s, a, t, p", date:"Sep Week 1" },
   { week:2,  phase:2, detail:"Set 2: i, n, m, d", date:"Sep Week 2" },
@@ -44,13 +60,25 @@ export const CURRICULUM_TIMELINE = [
   { week:38, phase:4, detail:"End of Reception review", date:"Jul Week 2" },
 ];
 
-// Helper: get the expected position for any given date
+function dateOnly(value) {
+  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+}
+
+function parseLocalDate(isoDate) {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+// Helper: get the expected position for any given date.
+// Uses teaching weeks rather than raw calendar weeks.
 export function getExpectedPosition(date = new Date()) {
-  const receptionStart = new Date(2025, 8, 1); // 1 September 2025
-  const weeksIn = Math.floor((date - receptionStart) / (7 * 24 * 60 * 60 * 1000));
-  const clampedWeek = Math.max(1, Math.min(38, weeksIn));
+  const today = dateOnly(date);
+  const calendarWeek = Math.max(1, Math.floor((today - RECEPTION_START) / MS_PER_WEEK) + 1);
+  const holidayWeeksSoFar = SCHOOL_BREAK_WEEKS.filter(b => parseLocalDate(b.start) <= today).length;
+  const teachingWeek = Math.max(1, calendarWeek - holidayWeeksSoFar);
+  const clampedWeek = Math.max(1, Math.min(38, teachingWeek));
   const entry = CURRICULUM_TIMELINE.find(t => t.week === clampedWeek) || CURRICULUM_TIMELINE[0];
-  return { weeksIn, ...entry };
+  return { weeksIn: teachingWeek, calendarWeek, holidayWeeksSoFar, ...entry };
 }
 
 // ─── PHASE 2 PHONEMES (23 GPCs) ───
@@ -177,7 +205,6 @@ export const WORDS = [
   { word:"dig", phonemes:["d","i","g"], phase:2, set:2, structure:"CVC", image:"⛏️" },
   { word:"dad", phonemes:["d","a","d"], phase:2, set:2, structure:"CVC", image:"👨" },
   { word:"pig", phonemes:["p","i","g"], phase:2, set:3, structure:"CVC", image:"🐷" },
-  { word:"dig", phonemes:["d","i","g"], phase:2, set:3, structure:"CVC", image:"⛏️" },
   { word:"dog", phonemes:["d","o","g"], phase:2, set:3, structure:"CVC", image:"🐕" },
   { word:"got", phonemes:["g","o","t"], phase:2, set:3, structure:"CVC", image:"🎁" },
   { word:"pot", phonemes:["p","o","t"], phase:2, set:3, structure:"CVC", image:"🍯" },

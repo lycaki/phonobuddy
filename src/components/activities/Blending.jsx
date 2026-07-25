@@ -1,24 +1,40 @@
 import { useState, useEffect, useContext } from 'react';
 import PhonoBuddyOwl from '../PhonoBuddyOwl';
 import { RecordingsContext } from '../../App';
-import { speak } from '../../utils/speech';
+import { PHONEMES } from '../../data/phonemes';
 
-export default function Blending({ word, onResult }) {
+export default function Blending({ word, isAssessment = false, onResult }) {
   const [blendStep, setBlendStep] = useState(0);
   const [showImage, setShowImage] = useState(false);
   const [answered, setAnswered] = useState(false);
+  const [tappedSounds, setTappedSounds] = useState([]);
+  const [retryPrompt, setRetryPrompt] = useState(false);
+  const [slideValue, setSlideValue] = useState(0);
   const { playSound } = useContext(RecordingsContext);
 
   useEffect(() => {
     setBlendStep(0);
     setShowImage(false);
     setAnswered(false);
+    setTappedSounds([]);
+    setRetryPrompt(false);
+    setSlideValue(0);
   }, [word.word]);
+
+  function displaySound(id) {
+    return PHONEMES.find(p => p.id === id)?.grapheme || id;
+  }
+
+  function tapSound(id, index) {
+    playSound(id);
+    setTappedSounds(prev => prev.includes(index) ? prev : [...prev, index]);
+  }
 
   function handleNextStep() {
     if (blendStep < 3) {
       const next = blendStep + 1;
       setBlendStep(next);
+      setSlideValue(0);
       if (next === 1) {
         word.phonemes.forEach((p, i) => setTimeout(() => playSound(p), i * 400));
       } else if (next === 2) {
@@ -30,7 +46,23 @@ export default function Blending({ word, onResult }) {
     }
   }
 
+  function handleSlide(value) {
+    const nextValue = Number(value);
+    setSlideValue(nextValue);
+    if (blendStep === 1 && nextValue >= 95) {
+      handleNextStep();
+    }
+  }
+
   function handleResult(correct) {
+    if (!correct && !isAssessment && !retryPrompt) {
+      setRetryPrompt(true);
+      setBlendStep(0);
+      setShowImage(false);
+      setSlideValue(0);
+      setTappedSounds([]);
+      return;
+    }
     setAnswered(true);
     onResult(correct);
   }
@@ -41,7 +73,7 @@ export default function Blending({ word, onResult }) {
         <PhonoBuddyOwl size={80} mood={blendStep >= 2 ? "excited" : "happy"} speaking={blendStep === 1} />
       </div>
       <p style={{fontFamily:"'Fredoka', sans-serif",fontSize:24,color:"#ffd966",margin:"0 0 20px"}}>
-        {blendStep === 0 && "Let's blend this word!"}
+        {blendStep === 0 && (retryPrompt ? "Try the sounds once more." : "Let's blend this word!")}
         {blendStep === 1 && "Push the sounds together..."}
         {blendStep === 2 && "What does it say?"}
         {blendStep === 3 && `${word.word}! ${word.image}`}
@@ -50,25 +82,37 @@ export default function Blending({ word, onResult }) {
       {/* Letter display */}
       <div style={{display:"flex",justifyContent:"center",gap:blendStep >= 1 ? 4 : 20,transition:"gap 0.6s ease",marginBottom:24}}>
         {word.phonemes.map((p, i) => (
-          <div key={i} style={{
-            background: blendStep === 0 ? "#1e2d4f" : blendStep >= 2 ? "#2a4a2a" : "#1e3d5f",
+          <button key={`${p}-${i}`} onClick={() => tapSound(p, i)} style={{
+            background: tappedSounds.includes(i) ? "#263f5f" : blendStep === 0 ? "#1e2d4f" : blendStep >= 2 ? "#2a4a2a" : "#1e3d5f",
             border: `3px solid ${blendStep >= 2 ? "#7bc67e" : "#4ecdc4"}`,
             borderRadius: 16,
             padding: "16px 24px",
             minWidth: 64,
+            cursor: "pointer",
             transition: "all 0.4s ease",
             transitionDelay: `${i * 0.1}s`,
             transform: blendStep === 1 ? `translateX(${(i - (word.phonemes.length-1)/2) * -4}px)` : "none"
           }}>
-            <span style={{fontFamily:"'Andika', sans-serif",fontSize:48,color:"white"}}>{p}</span>
-          </div>
+            <span style={{fontFamily:"'Andika', sans-serif",fontSize:48,color:"white"}}>{displaySound(p)}</span>
+          </button>
         ))}
       </div>
 
       {/* Sweep line animation */}
       {blendStep === 1 && (
-        <div style={{width:200,height:4,background:"#2a3a5c",borderRadius:2,margin:"0 auto 20px",overflow:"hidden"}}>
-          <div style={{width:40,height:4,background:"#ffd966",borderRadius:2,animation:"sweep 1.5s ease-in-out infinite"}} />
+        <div style={{maxWidth:260,margin:"0 auto 20px"}}>
+          <div style={{height:4,background:"#2a3a5c",borderRadius:2,overflow:"hidden",marginBottom:10}}>
+            <div style={{width:40,height:4,background:"#ffd966",borderRadius:2,animation:"sweep 1.5s ease-in-out infinite"}} />
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={slideValue}
+            onChange={e => handleSlide(e.target.value)}
+            aria-label="Slide to blend"
+            style={{width:"100%",accentColor:"#ffd966"}}
+          />
         </div>
       )}
 

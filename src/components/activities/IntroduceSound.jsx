@@ -44,6 +44,12 @@ export default function IntroduceSound({ phoneme, onComplete }) {
       )}
       {step === 3 && (
         <div style={{animation:"bounceIn 0.5s ease"}}>
+          {phoneme.formation && (
+            <div style={{background:"#0f1729",border:"2px solid #ffd966",borderRadius:16,padding:14,margin:"0 auto 18px",maxWidth:420}}>
+              <p style={{fontFamily:"'Fredoka'",fontSize:16,color:"#ffd966",margin:"0 0 6px"}}>Write it in the air</p>
+              <p style={{fontFamily:"'Andika'",fontSize:15,color:"#f0f0f0",margin:0}}>{phoneme.formation}</p>
+            </div>
+          )}
           <p style={{fontFamily:"'Fredoka', sans-serif",fontSize:24,color:"#ffd966",marginBottom:16}}>Words with <span style={{fontFamily:"'Andika'",fontSize:36}}>{phoneme.grapheme}</span></p>
           <div style={{display:"flex",flexWrap:"wrap",gap:12,justifyContent:"center",marginBottom:20}}>
             {phoneme.words.slice(0,4).map(w => (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { db, saveRecordingBlob, getRecordingBlob, getAllRecordingIds } from '../utils/storage';
+import { saveRecordingBlob, getRecordingBlob, getAllRecordingIds, getRecordingRecord } from '../utils/storage';
 import { speakPhoneme } from '../utils/speech';
 
 export function useRecordings(familyCode) {
@@ -16,7 +16,8 @@ export function useRecordings(familyCode) {
   }, []);
 
   const saveRecording = useCallback(async (recordingId, blob) => {
-    await saveRecordingBlob(recordingId, blob);
+    const timestamp = Date.now();
+    await saveRecordingBlob(recordingId, blob, timestamp);
     setRecordingIds(prev => new Set([...prev, recordingId]));
 
     // Revoke old cached URL
@@ -30,7 +31,7 @@ export function useRecordings(familyCode) {
       setSyncStatus('uploading');
       try {
         const { uploadRecording } = await import('../utils/cloudSync');
-        await uploadRecording(familyCode, recordingId, blob);
+        await uploadRecording(familyCode, recordingId, blob, timestamp);
         setSyncStatus('idle');
       } catch (e) {
         console.error('Upload failed:', e);
@@ -86,15 +87,22 @@ export function useRecordings(familyCode) {
   const pullFromCloud = useCallback(async (code) => {
     setSyncStatus('downloading');
     try {
-      const { downloadAllRecordings } = await import('../utils/cloudSync');
-      const remoteRecordings = await downloadAllRecordings(code);
-      for (const [recordingId, blob] of Object.entries(remoteRecordings)) {
-        await saveRecordingBlob(recordingId, blob);
+      const { downloadAllRecordingEntries } = await import('../utils/cloudSync');
+      const remoteRecordings = await downloadAllRecordingEntries(code);
+      let saved = 0;
+      for (const [recordingId, entry] of Object.entries(remoteRecordings)) {
+        const local = await getRecordingRecord(recordingId);
+        const localTimestamp = local?.timestamp || 0;
+        const remoteTimestamp = entry.updated || 0;
+        if (!local?.blob || remoteTimestamp >= localTimestamp) {
+          await saveRecordingBlob(recordingId, entry.blob, remoteTimestamp || Date.now());
+          saved++;
+        }
       }
       const keys = await getAllRecordingIds();
       setRecordingIds(new Set(keys));
       setSyncStatus('idle');
-      return Object.keys(remoteRecordings).length;
+      return saved;
     } catch (e) {
       console.error('Pull failed:', e);
       setSyncStatus('error');

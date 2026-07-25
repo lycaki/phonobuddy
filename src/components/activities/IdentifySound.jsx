@@ -1,33 +1,43 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import PhonoBuddyOwl from '../PhonoBuddyOwl';
 import { RecordingsContext } from '../../App';
+import { PHONEMES } from '../../data/phonemes';
 
-export default function IdentifySound({ targetPhoneme, allPhonemes, onResult }) {
+export default function IdentifySound({ targetPhoneme, allPhonemes, isAssessment = false, onResult }) {
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
+  const [retryMode, setRetryMode] = useState(false);
+  const [canTryAgain, setCanTryAgain] = useState(false);
   const { playSound } = useContext(RecordingsContext);
   const playSoundRef = useRef(playSound);
   useEffect(() => { playSoundRef.current = playSound; }, [playSound]);
 
   useEffect(() => {
-    const distractors = allPhonemes
+    const pool = allPhonemes.length >= 4 ? allPhonemes : PHONEMES.slice(0, 12);
+    const confusionOptions = (targetPhoneme.confusedWith || [])
+      .map(id => PHONEMES.find(p => p.id === id))
+      .filter(Boolean);
+    const distractors = [...confusionOptions, ...pool
       .filter(p => p.id !== targetPhoneme.id)
-      .sort(() => Math.random() - 0.5)
+      .sort(() => Math.random() - 0.5)]
+      .filter((p, index, arr) => arr.findIndex(other => other.id === p.id) === index)
       .slice(0, 3);
     const opts = [...distractors, targetPhoneme].sort(() => Math.random() - 0.5);
     setOptions(opts);
     setSelected(null);
     setShowResult(false);
     setHasPlayed(false);
+    setRetryMode(false);
+    setCanTryAgain(false);
 
     // Auto-play — use ref to avoid stale closure, try after short delay
     const timer = setTimeout(() => {
       playSoundRef.current(targetPhoneme.id).then(() => setHasPlayed(true)).catch(() => {});
     }, 600);
     return () => clearTimeout(timer);
-  }, [targetPhoneme.id]);
+  }, [allPhonemes, targetPhoneme]);
 
   function handlePlaySound() {
     playSound(targetPhoneme.id);
@@ -39,7 +49,20 @@ export default function IdentifySound({ targetPhoneme, allPhonemes, onResult }) 
     setSelected(p.id);
     setShowResult(true);
     const correct = p.id === targetPhoneme.id;
-    setTimeout(() => onResult(correct, p.id === "b" || p.id === "d" ? p.id : null), 1400);
+    if (!correct && !isAssessment && !retryMode) {
+      setCanTryAgain(true);
+      setTimeout(() => playSound(targetPhoneme.id), 350);
+      return;
+    }
+    setTimeout(() => onResult(correct, p.id === "b" || p.id === "d" ? p.id : null), correct ? 1000 : 1400);
+  }
+
+  function tryAgain() {
+    setSelected(null);
+    setShowResult(false);
+    setRetryMode(true);
+    setCanTryAgain(false);
+    handlePlaySound();
   }
 
   return (
@@ -89,9 +112,21 @@ export default function IdentifySound({ targetPhoneme, allPhonemes, onResult }) 
         </p>
       )}
       {showResult && selected !== targetPhoneme.id && (
-        <p style={{fontFamily:"'Fredoka', sans-serif",fontSize:22,color:"#e88d8d",marginTop:20}}>
-          Nearly! It was <span style={{fontFamily:"'Andika', sans-serif",fontSize:32,color:"#ffd966"}}>{targetPhoneme.grapheme}</span>
-        </p>
+        <div style={{marginTop:20}}>
+          <p style={{fontFamily:"'Fredoka', sans-serif",fontSize:22,color:"#e88d8d",margin:"0 0 12px"}}>
+            {canTryAgain ? "Listen again, then try once more." : "Nearly! It was"} <span style={{fontFamily:"'Andika', sans-serif",fontSize:32,color:"#ffd966"}}>{targetPhoneme.grapheme}</span>
+          </p>
+          {canTryAgain && (
+            <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+              <button onClick={tryAgain} style={{background:"#4ecdc4",border:"none",borderRadius:14,padding:"12px 24px",fontSize:18,fontFamily:"'Fredoka'",color:"#0f1729",cursor:"pointer"}}>
+                Try again
+              </button>
+              <button onClick={() => onResult(false, selected === "b" || selected === "d" ? selected : null)} style={{background:"#1a2744",border:"2px solid #e88d8d",borderRadius:14,padding:"12px 20px",fontSize:16,fontFamily:"'Fredoka'",color:"#e88d8d",cursor:"pointer"}}>
+                Keep going
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

@@ -55,13 +55,17 @@ export async function setFamilyCode(code) {
 }
 
 // --- Recordings ---
-export async function saveRecordingBlob(phonemeId, blob) {
-  await db.recordings.put({ phonemeId, blob, timestamp: Date.now() });
+export async function saveRecordingBlob(phonemeId, blob, timestamp = Date.now()) {
+  await db.recordings.put({ phonemeId, blob, timestamp });
 }
 
 export async function getRecordingBlob(phonemeId) {
   const row = await db.recordings.get(phonemeId);
   return row ? row.blob : null;
+}
+
+export async function getRecordingRecord(phonemeId) {
+  return await db.recordings.get(phonemeId);
 }
 
 export async function getAllRecordingIds() {

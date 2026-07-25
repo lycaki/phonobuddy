@@ -46,24 +46,36 @@ function unsanitiseKey(key) {
 }
 
 // Upload a single recording
-export async function uploadRecording(familyCode, recordingId, audioBlob) {
+export async function uploadRecording(familyCode, recordingId, audioBlob, localUpdated = Date.now()) {
   const db = await getFirebaseDb();
-  if (!db) return;
+  if (!db) return { uploaded: false, skipped: false };
 
-  const { ref, set } = await import('firebase/database');
+  const { ref, get, set } = await import('firebase/database');
   const safeKey = sanitiseKey(recordingId);
-  const base64 = await blobToBase64(audioBlob);
+  const targetRef = ref(db, `recordings/${familyCode}/${safeKey}`);
+  const remoteSnapshot = await get(targetRef);
 
-  await set(ref(db, `recordings/${familyCode}/${safeKey}`), {
+  if (remoteSnapshot.exists()) {
+    const remote = remoteSnapshot.val();
+    if (remote?.updated && localUpdated && remote.updated > localUpdated) {
+      return { uploaded: false, skipped: true };
+    }
+  }
+
+  const base64 = await blobToBase64(audioBlob);
+  const updated = localUpdated || Date.now();
+
+  await set(targetRef, {
     audio: base64,
     type: audioBlob.type || 'audio/webm',
     size: audioBlob.size,
-    updated: Date.now(),
+    updated,
   });
+  return { uploaded: true, skipped: false };
 }
 
 // Upload ALL local recordings in one go
-export async function uploadAllRecordings(familyCode, getAllRecordingIds, getRecordingBlob, onProgress) {
+export async function uploadAllRecordings(familyCode, getAllRecordingIds, getRecordingBlob, onProgress, getRecordingRecord) {
   const db = await getFirebaseDb();
   if (!db) throw new Error('Firebase not configured');
 
@@ -71,10 +83,11 @@ export async function uploadAllRecordings(familyCode, getAllRecordingIds, getRec
   let uploaded = 0;
 
   for (const id of ids) {
-    const blob = await getRecordingBlob(id);
+    const record = getRecordingRecord ? await getRecordingRecord(id) : null;
+    const blob = record?.blob || await getRecordingBlob(id);
     if (blob && blob.size > 0) {
-      await uploadRecording(familyCode, id, blob);
-      uploaded++;
+      const result = await uploadRecording(familyCode, id, blob, record?.timestamp || 0);
+      if (result.uploaded) uploaded++;
       if (onProgress) onProgress(uploaded, ids.length);
     }
   }
@@ -113,8 +126,8 @@ export async function listRemoteRecordings(familyCode) {
   return Object.keys(snapshot.val()).map(unsanitiseKey);
 }
 
-// Download ALL recordings for a family code
-export async function downloadAllRecordings(familyCode, onProgress) {
+// Download ALL recordings with cloud timestamps for safe local merging
+export async function downloadAllRecordingEntries(familyCode, onProgress) {
   const db = await getFirebaseDb();
   if (!db) throw new Error('Firebase not configured');
 
@@ -131,12 +144,25 @@ export async function downloadAllRecordings(familyCode, onProgress) {
     const entry = data[key];
     if (entry && entry.audio) {
       const id = unsanitiseKey(key);
-      recordings[id] = base64ToBlob(entry.audio, entry.type || 'audio/webm');
+      recordings[id] = {
+        blob: base64ToBlob(entry.audio, entry.type || 'audio/webm'),
+        updated: entry.updated || 0,
+      };
       downloaded++;
       if (onProgress) onProgress(downloaded, keys.length);
     }
   }
 
+  return recordings;
+}
+
+// Download ALL recordings for a family code
+export async function downloadAllRecordings(familyCode, onProgress) {
+  const entries = await downloadAllRecordingEntries(familyCode, onProgress);
+  const recordings = {};
+  for (const [id, entry] of Object.entries(entries)) {
+    recordings[id] = entry.blob;
+  }
   return recordings;
 }
 

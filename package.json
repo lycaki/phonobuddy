@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "generate:monetization": "node scripts/generate-monetization-pack.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -1,11 +1,12 @@
 import { useState, useContext, useEffect } from 'react';
 import { STORIES, DIFFICULTIES, getStoriesByDifficulty, getStoryWordCount } from '../data/stories';
+import { PHONEMES, WORDS, TRICKY_WORDS } from '../data/phonemes';
 import { RecordingsContext } from '../App';
 import { speak } from '../utils/speech';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { db } from '../utils/storage';
 
-export default function Reading() {
+export default function Reading({ progress = {} }) {
   const [selectedStory, setSelectedStory] = useState(null);
   const [readingHistory, setReadingHistory] = useState({});
 
@@ -28,10 +29,43 @@ export default function Reading() {
     db.settings.put({ key: 'readingHistory', value: updated });
   }
 
+  const knownIds = new Set(Object.entries(progress).filter(([, p]) => p.introduced).map(([id]) => id));
+  const knownPhase = Math.max(2, ...Object.entries(progress)
+    .filter(([, p]) => p.introduced)
+    .map(([id]) => PHONEMES.find(p => p.id === id)?.phase || 2));
+
+  function cleanWord(rawWord) {
+    return rawWord.toLowerCase().replace(/[^a-z']/g, '');
+  }
+
+  function getWordReadiness(rawWord) {
+    const clean = cleanWord(rawWord);
+    if (!clean) return { clean, ready: true, type: "space" };
+    const tricky = TRICKY_WORDS.find(tw => tw.word.toLowerCase() === clean);
+    if (tricky) return { clean, ready: tricky.phase <= knownPhase, type: "tricky" };
+    const entry = WORDS.find(w => w.word.toLowerCase() === clean);
+    if (!entry) return { clean, ready: false, type: "unknown" };
+    return { clean, ready: entry.phonemes.every(p => knownIds.has(p)), type: "decodable" };
+  }
+
+  function getStoryReadiness(story) {
+    const words = story.sentences.flatMap(sentence => sentence.split(/\s+/).filter(Boolean));
+    const statuses = words.map(getWordReadiness);
+    const ready = statuses.filter(s => s.ready).length;
+    const total = statuses.length || 1;
+    return {
+      ready,
+      total,
+      percent: Math.round((ready / total) * 100),
+      needsHelp: statuses.filter(s => !s.ready).slice(0, 6).map(s => s.clean),
+    };
+  }
+
   if (selectedStory) {
     return (
       <StoryReader
         story={selectedStory}
+        getWordReadiness={getWordReadiness}
         onClose={() => setSelectedStory(null)}
         onComplete={() => { markAsRead(selectedStory.id); setSelectedStory(null); }}
       />
@@ -44,7 +78,7 @@ export default function Reading() {
         <PhonoBuddyOwl size={60} mood="happy" />
         <div>
           <h2 style={{fontFamily:"'Fredoka'",fontSize:26,color:"#ffd966",margin:0}}>📚 Story Time</h2>
-          <p style={{fontFamily:"'Andika'",fontSize:14,color:"#a0aec0",margin:0}}>Read a story together — tap any word to hear it</p>
+          <p style={{fontFamily:"'Andika'",fontSize:14,color:"#a0aec0",margin:0}}>Choose help or read-it-myself mode</p>
         </div>
       </div>
 
@@ -62,9 +96,11 @@ export default function Reading() {
               {stories.map(story => {
                 const hist = readingHistory[story.id];
                 const wordCount = getStoryWordCount(story);
+                const readiness = getStoryReadiness(story);
+                const isReady = readiness.percent >= 80;
                 return (
                   <button key={story.id} onClick={() => setSelectedStory(story)} style={{
-                    background:"#1a2744",border:`2px solid ${hist ? d.color : "#2a3a5c"}`,borderRadius:14,
+                    background:"#1a2744",border:`2px solid ${isReady ? "#7bc67e" : hist ? d.color : "#2a3a5c"}`,borderRadius:14,
                     padding:14,cursor:"pointer",textAlign:"left",position:"relative",
                   }}>
                     <div style={{fontSize:36,marginBottom:6}}>{story.emoji}</div>
@@ -73,6 +109,9 @@ export default function Reading() {
                     </div>
                     <div style={{fontFamily:"'Andika'",fontSize:11,color:"#a0aec0",marginBottom:6}}>
                       {story.sentences.length} sentences · {wordCount} words
+                    </div>
+                    <div style={{fontFamily:"'Andika'",fontSize:10,color:isReady ? "#7bc67e" : "#ffd966",marginBottom:6}}>
+                      {isReady ? "Ready to read" : `${readiness.percent}% ready · read with help`}
                     </div>
                     {hist && (
                       <div style={{display:"flex",gap:4,alignItems:"center"}}>
@@ -94,8 +133,10 @@ export default function Reading() {
 }
 
 // ─── STORY READER ───
-function StoryReader({ story, onClose, onComplete }) {
+function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
   const [sentenceIdx, setSentenceIdx] = useState(0);
+  const [readMode, setReadMode] = useState("help");
+  const [showHelp, setShowHelp] = useState(true);
   const { playSound } = useContext(RecordingsContext);
   const sentence = story.sentences[sentenceIdx];
   const isLast = sentenceIdx === story.sentences.length - 1;
@@ -105,6 +146,7 @@ function StoryReader({ story, onClose, onComplete }) {
   const words = sentence.split(/(\s+)/).filter(s => s.trim());
 
   function tapWord(rawWord) {
+    if (readMode === "myself" && !showHelp) return;
     // Strip punctuation for lookup
     const clean = rawWord.toLowerCase().replace(/[^a-z']/g, '');
     if (!clean) return;
@@ -120,11 +162,15 @@ function StoryReader({ story, onClose, onComplete }) {
       onComplete();
     } else {
       setSentenceIdx(i => i + 1);
+      setShowHelp(readMode === "help");
     }
   }
 
   function back() {
-    if (sentenceIdx > 0) setSentenceIdx(i => i - 1);
+    if (sentenceIdx > 0) {
+      setSentenceIdx(i => i - 1);
+      setShowHelp(readMode === "help");
+    }
   }
 
   const difficulty = DIFFICULTIES.find(d => d.id === story.difficulty);
@@ -153,30 +199,57 @@ function StoryReader({ story, onClose, onComplete }) {
         <div style={{background:`linear-gradient(90deg, ${difficulty.color}, ${difficulty.color}aa)`,height:"100%",width:`${progress}%`,borderRadius:6,transition:"width 0.4s"}} />
       </div>
 
+      <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16}}>
+        {[
+          { id:"help", label:"Read with help" },
+          { id:"myself", label:"Read myself" },
+        ].map(mode => (
+          <button key={mode.id} onClick={() => { setReadMode(mode.id); setShowHelp(mode.id === "help"); }} style={{
+            background: readMode === mode.id ? "#4ecdc4" : "#1a2744",
+            border:`2px solid ${readMode === mode.id ? "#4ecdc4" : "#2a3a5c"}`,
+            borderRadius:12,
+            padding:"8px 12px",
+            fontFamily:"'Fredoka'",
+            fontSize:13,
+            color: readMode === mode.id ? "#0f1729" : "#a0aec0",
+            cursor:"pointer",
+          }}>
+            {mode.label}
+          </button>
+        ))}
+      </div>
+
       {/* Sentence display */}
       <div style={{background:"rgba(26,39,68,0.6)",borderRadius:24,padding:"40px 24px",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.05)",minHeight:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{textAlign:"center",lineHeight:1.6}}>
           {words.map((word, i) => (
             <span key={i}>
+              {(() => {
+                const readiness = getWordReadiness(word);
+                const helpVisible = showHelp && !readiness.ready;
+                return (
               <span
                 onClick={() => tapWord(word)}
                 style={{
                   fontFamily:"'Andika', sans-serif",
                   fontSize: 36,
-                  color:"white",
+                  color: helpVisible ? "#ffd966" : "white",
                   display:"inline-block",
                   padding:"4px 8px",
                   margin:"2px",
                   borderRadius:8,
-                  cursor:"pointer",
+                  cursor: readMode === "myself" && !showHelp ? "default" : "pointer",
                   transition:"all 0.15s",
-                  background:"transparent",
+                  background: helpVisible ? "rgba(255,217,102,0.12)" : "transparent",
+                  borderBottom: helpVisible ? "3px solid #ffd966" : "3px solid transparent",
                 }}
                 onMouseEnter={e => e.currentTarget.style.background="rgba(78,205,196,0.2)"}
-                onMouseLeave={e => e.currentTarget.style.background="transparent"}
+                onMouseLeave={e => e.currentTarget.style.background=helpVisible ? "rgba(255,217,102,0.12)" : "transparent"}
               >
                 {word}
               </span>
+                );
+              })()}
             </span>
           ))}
         </div>
@@ -184,10 +257,18 @@ function StoryReader({ story, onClose, onComplete }) {
 
       {/* Read whole sentence button */}
       <div style={{textAlign:"center",margin:"16px 0"}}>
-        <button onClick={readWholeSentence} style={{background:"#1a2744",border:"2px solid #4ecdc4",borderRadius:50,width:60,height:60,fontSize:24,cursor:"pointer"}}>
-          🔊
-        </button>
-        <p style={{fontFamily:"'Andika'",fontSize:11,color:"#a0aec0",marginTop:6}}>Tap to hear the whole sentence</p>
+        {(readMode === "help" || showHelp) ? (
+          <>
+            <button onClick={readWholeSentence} style={{background:"#1a2744",border:"2px solid #4ecdc4",borderRadius:50,width:60,height:60,fontSize:24,cursor:"pointer"}}>
+              🔊
+            </button>
+            <p style={{fontFamily:"'Andika'",fontSize:11,color:"#a0aec0",marginTop:6}}>Tap to hear the whole sentence</p>
+          </>
+        ) : (
+          <button onClick={() => setShowHelp(true)} style={{background:"#1a2744",border:"2px solid #ffd966",borderRadius:14,padding:"10px 18px",fontSize:14,fontFamily:"'Fredoka'",color:"#ffd966",cursor:"pointer"}}>
+            Need help?
+          </button>
+        )}
       </div>
 
       {/* Navigation */}

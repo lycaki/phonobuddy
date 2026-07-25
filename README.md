@@ -308,3 +308,36 @@ This app was built collaboratively with Claude Sonnet 4.5/4.6 over multiple sess
 ---
 
 *"Make Russell's life easier and help Logan succeed."*
+
+---
+
+## Monetization starter
+
+PhonoBuddy now has a simple digital-product path:
+
+- Run `npm run generate:monetization` to generate a full printable phonics pack, a free sample, and listing copy.
+- Upload `monetization/products/phonobuddy-reception-phonics-starter-pack.pdf` to Payhip, Gumroad, Ko-fi, Etsy, or TPT.
+- Paste the live product URL into `src/data/monetization.js`.
+- The app's Parent Resources screen will link to the free sample and the paid product.
+
+See `monetization/README.md` for the account setup workflow.
+
+---
+
+## Latest update — 25 April 2026
+
+Changes made to improve the app for a 5/6-year-old phonics reader while preserving saved recordings, progress, family-code sync, and existing storage:
+
+- Added a simpler child-facing home screen with a default short session, while keeping longer sessions, assessment, Quick Setup, and catch-up detail in Parent view.
+- Added short-session pacing so practice can finish sooner with fewer review items, fewer new sounds, and fewer blend words.
+- Changed curriculum date logic to use teaching weeks with school-break weeks removed, so late-April catch-up pressure is not inflated by holidays.
+- Made wrong answers gentler in normal practice by offering one listen-and-try-again moment before the result is recorded.
+- Improved blending practice with tappable sound buttons, a slide-to-blend control, and child-facing grapheme display for sounds like long/short `oo`.
+- Added air-writing/formation prompts when introducing a new sound.
+- Improved Story Time with story readiness labels, "Read with help" / "Read myself" modes, and optional word help highlighting.
+- Improved Word Practice with clearer tricky-word "remember this part" highlighting, common sound-pair practice, and child-facing sound labels.
+- Added post-session parent feedback buttons: Too easy, Just right, Too hard, Tired. Feedback is saved in settings without changing the recordings table.
+- Removed the duplicate `dig` word entry from the word practice data.
+- Added timestamp-aware recording sync protection: bulk upload/download now skips older copies instead of overwriting newer cloud/device recordings for the same sound.
+- Clarified reset wording so "delete recordings" and "wipe everything" are clearly local-device actions and do not delete cloud/iPad recordings.
+- Recording backups now preserve original timestamps, so restoring an older backup will not make it look newer than recordings already saved in the cloud.

@@ -9,15 +9,24 @@ export default function WordPractice({ progress }) {
   const [selectedWord, setSelectedWord] = useState(null);
   const [blendStep, setBlendStep] = useState(0);
   const [showTricky, setShowTricky] = useState(false);
+  const [showConfusions, setShowConfusions] = useState(false);
   const { playSound } = useContext(RecordingsContext);
+
+  const confusionSets = [
+    { label: "b / d", ids: ["b", "d"] },
+    { label: "m / n", ids: ["m", "n"] },
+    { label: "f / v", ids: ["f", "v"] },
+    { label: "ch / sh", ids: ["ch", "sh"] },
+    { label: "oo / oo", ids: ["oo_long", "oo_short"] },
+  ];
 
   const knownIds = useMemo(() => {
     return new Set(Object.entries(progress).filter(([, p]) => p.introduced).map(([id]) => id));
   }, [progress]);
 
   const filteredWords = useMemo(() => {
-    if (selectedPhase === 0) return WORDS;
-    return WORDS.filter(w => w.phase === selectedPhase);
+    const words = selectedPhase === 0 ? WORDS : WORDS.filter(w => w.phase === selectedPhase);
+    return [...new Map(words.map(w => [w.word, w])).values()];
   }, [selectedPhase]);
 
   // Words the child can decode (all phonemes known)
@@ -52,6 +61,32 @@ export default function WordPractice({ progress }) {
     }
   }
 
+  function displaySound(id) {
+    return PHONEMES.find(p => p.id === id)?.grapheme || id;
+  }
+
+  function renderHeartWord(word, trickyPart) {
+    const parts = trickyPart.includes("-") ? trickyPart.split("-").filter(Boolean) : [trickyPart];
+    const lowerParts = parts.map(p => p.toLowerCase());
+    if (!trickyPart.includes("-")) {
+      const start = word.toLowerCase().indexOf(trickyPart.toLowerCase());
+      if (start >= 0) {
+        return (
+          <>
+            {word.slice(0, start)}
+            <span style={{color:"#f4a261",borderBottom:"3px solid #f4a261"}}>{word.slice(start, start + trickyPart.length)}</span>
+            {word.slice(start + trickyPart.length)}
+          </>
+        );
+      }
+    }
+    return word.split("").map((letter, i) => (
+      <span key={`${letter}-${i}`} style={lowerParts.includes(letter.toLowerCase()) ? {color:"#f4a261",borderBottom:"3px solid #f4a261"} : {}}>
+        {letter}
+      </span>
+    ));
+  }
+
   return (
     <div>
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
@@ -79,7 +114,7 @@ export default function WordPractice({ progress }) {
                   borderRadius: 16, padding: "12px 20px", minWidth: 56, cursor: "pointer",
                   transition: "all 0.4s ease", transitionDelay: `${i * 0.1}s`,
                 }}>
-                  <span style={{fontFamily:"'Andika'",fontSize:44,color:"white"}}>{p}</span>
+                  <span style={{fontFamily:"'Andika'",fontSize:44,color:"white"}}>{displaySound(p)}</span>
                 </button>
               ))}
             </div>
@@ -116,7 +151,7 @@ export default function WordPractice({ progress }) {
               return (
                 <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:i < selectedWord.phonemes.length-1 ? "1px solid rgba(255,255,255,0.05)" : "none"}}>
                   <button onClick={() => playSound(p)} style={{background:"#0f1729",border:"1px solid #2a3a5c",borderRadius:8,width:36,height:36,fontSize:18,color:"white",cursor:"pointer",fontFamily:"'Andika'",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    {p}
+                    {displaySound(p)}
                   </button>
                   <span style={{fontSize:18}}>{phoneme?.emoji}</span>
                   <span style={{fontFamily:"'Andika'",fontSize:13,color:"#a0aec0"}}>{phoneme?.hint}</span>
@@ -162,11 +197,42 @@ export default function WordPractice({ progress }) {
                 <button key={tw.id} onClick={() => playSound(`word:${tw.word}`)} style={{
                   background:"#2a2010",border:"2px solid #f4a261",borderRadius:14,padding:12,cursor:"pointer",textAlign:"center",position:"relative",
                 }}>
-                  <span style={{fontFamily:"'Andika'",fontSize:28,color:"white",display:"block"}}>{tw.word}</span>
+                  <span style={{fontFamily:"'Andika'",fontSize:28,color:"white",display:"block"}}>{renderHeartWord(tw.word, tw.trickyPart)}</span>
                   <span style={{fontFamily:"'Andika'",fontSize:11,color:"#f4a261",display:"block",marginTop:2}}>
-                    tricky: {tw.trickyPart}
+                    remember: {tw.trickyPart}
                   </span>
                 </button>
+              ))}
+            </div>
+          )}
+
+          <button onClick={() => setShowConfusions(!showConfusions)} style={{
+            background: showConfusions ? "#1a302f" : "#1a2744",
+            border: `2px solid ${showConfusions ? "#4ecdc4" : "#2a3a5c"}`,
+            borderRadius:12, padding:"10px 16px", width:"100%", cursor:"pointer",
+            display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16,
+          }}>
+            <span style={{fontFamily:"'Fredoka'",fontSize:16,color:"#4ecdc4"}}>Sound Pairs</span>
+            <span style={{fontSize:14,color:"#a0aec0"}}>{showConfusions ? "▲" : "▼"}</span>
+          </button>
+
+          {showConfusions && (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(150px, 1fr))",gap:10,marginBottom:20}}>
+              {confusionSets.map(set => (
+                <div key={set.label} style={{background:"#0f1729",border:"2px solid #2a3a5c",borderRadius:14,padding:12}}>
+                  <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#a0aec0",marginBottom:8,textAlign:"center"}}>{set.label}</div>
+                  <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+                    {set.ids.map(id => {
+                      const phoneme = PHONEMES.find(p => p.id === id);
+                      return (
+                        <button key={id} onClick={() => playSound(id)} style={{background:"#1e2d4f",border:"2px solid #4ecdc4",borderRadius:12,padding:"8px 12px",cursor:"pointer",minWidth:54}}>
+                          <span style={{fontFamily:"'Andika'",fontSize:30,color:"white",display:"block"}}>{phoneme?.grapheme || id}</span>
+                          <span style={{fontSize:16}}>{phoneme?.emoji}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -190,7 +256,7 @@ export default function WordPractice({ progress }) {
                     <div style={{fontSize:28}}>{w.image}</div>
                     <div style={{fontFamily:"'Andika'",fontSize:24,color:"white",margin:"2px 0"}}>{w.word}</div>
                     <div style={{fontFamily:"'Andika'",fontSize:10,color:"#4ecdc4"}}>
-                      {w.structure || w.phonemes.join("·")}
+                      {w.structure || w.phonemes.map(displaySound).join("·")}
                     </div>
                   </button>
                 ))}
@@ -210,7 +276,7 @@ export default function WordPractice({ progress }) {
                     <div style={{fontSize:28}}>🔒</div>
                     <div style={{fontFamily:"'Andika'",fontSize:24,color:"#4a5578",margin:"2px 0"}}>{w.word}</div>
                     <div style={{fontFamily:"'Andika'",fontSize:10,color:"#4a5578"}}>
-                      {w.phonemes.map(p => knownIds.has(p) ? p : "?").join(" · ")}
+                      {w.phonemes.map(p => knownIds.has(p) ? displaySound(p) : "?").join(" · ")}
                     </div>
                   </div>
                 ))}

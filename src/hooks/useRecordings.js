@@ -4,14 +4,17 @@ import { speakPhoneme } from '../utils/speech';
 
 export function useRecordings(familyCode) {
   const [recordingIds, setRecordingIds] = useState(new Set());
+  const [localScanComplete, setLocalScanComplete] = useState(false);
   const [syncStatus, setSyncStatus] = useState('idle');
   const urlCache = useRef({});
+  const autoPullCode = useRef(null);
 
   // Load existing recording IDs on mount
   useEffect(() => {
     getAllRecordingIds().then(keys => {
       console.log(`[PhonoBuddy] Loaded ${keys.length} recordings from DB`, keys.filter(k => k.startsWith('word:')).length, 'words');
       setRecordingIds(new Set(keys));
+      setLocalScanComplete(true);
     });
   }, []);
 
@@ -55,7 +58,7 @@ export function useRecordings(familyCode) {
   }, [recordingIds]);
 
   // Play a sound or word: ALWAYS check DB directly, never rely only on in-memory Set
-  const playSound = useCallback(async (id) => {
+  const playSound = useCallback(async (id, options = {}) => {
     // Try DB directly — this avoids stale closure issues with recordingIds
     const blob = await getRecordingBlob(id);
     if (blob && blob.size > 0) {
@@ -68,7 +71,7 @@ export function useRecordings(familyCode) {
       try {
         const audio = new Audio(url);
         await audio.play();
-        return;
+        return true;
       } catch (e) {
         console.warn(`[PhonoBuddy] Audio play failed for "${id}":`, e);
         // Fall through to TTS
@@ -77,7 +80,7 @@ export function useRecordings(familyCode) {
 
     // These require a reviewed human model. Synthesising the label "schwa" or
     // guessing voiced th would teach the wrong sound.
-    if (id === 'schwa' || id === 'th_voiced') return false;
+    if (id === 'schwa' || id === 'th_voiced' || options.allowTts === false) return false;
 
     // No recording found — use TTS fallback
     if (id.startsWith('word:')) {
@@ -86,6 +89,7 @@ export function useRecordings(familyCode) {
     } else {
       speakPhoneme(id);
     }
+    return false;
   }, []); // No dependencies — reads DB directly every time
 
   const pullFromCloud = useCallback(async (code) => {
@@ -114,6 +118,24 @@ export function useRecordings(familyCode) {
       throw e;
     }
   }, []);
+
+  // A returning device already has its family code, so there is no Join click
+  // to trigger the initial recording download. Pull automatically when its
+  // local pure-sound bank is incomplete. This avoids downloading every word
+  // recording again on ordinary launches where the bank is already present.
+  useEffect(() => {
+    if (!familyCode || !localScanComplete || autoPullCode.current === familyCode) return;
+    const localSoundCount = [...recordingIds].filter(id => !id.startsWith('word:')).length;
+    if (localSoundCount >= 50) {
+      autoPullCode.current = familyCode;
+      return;
+    }
+
+    autoPullCode.current = familyCode;
+    pullFromCloud(familyCode).catch(() => {
+      autoPullCode.current = null;
+    });
+  }, [familyCode, localScanComplete, pullFromCloud, recordingIds]);
 
   // Cleanup URLs on unmount
   useEffect(() => {

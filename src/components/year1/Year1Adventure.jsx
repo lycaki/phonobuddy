@@ -101,7 +101,7 @@ function RoadPiece({ itemPart, index, joined, next, onJoin }) {
   );
 }
 
-export default function Year1Adventure({ year1, onExit }) {
+export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
   const recordings = useContext(RecordingsContext);
   const [stage, setStage] = useState('map');
   const [items, setItems] = useState([]);
@@ -120,6 +120,9 @@ export default function Year1Adventure({ year1, onExit }) {
     () => getYear1Coverage(recordings.recordingIds),
     [recordings.recordingIds],
   );
+  const expectedReusableSounds = coverage.requiredSoundIds.length - coverage.questionableSounds.length;
+  const voiceReady = coverage.reusableSounds.length >= expectedReusableSounds;
+  const voiceLoading = recordings.syncStatus === 'downloading';
 
   useEffect(() => {
     if (stage !== 'mission' || !item) return;
@@ -132,6 +135,7 @@ export default function Year1Adventure({ year1, onExit }) {
   }, [stage, round, item]);
 
   function startSession() {
+    if (!voiceReady || voiceLoading) return;
     setItems(chooseSessionItems(year1.selectedBlock, year1.stats.completedItems, year1.pseudoApproved));
     setRound(0);
     setSessionCorrect(0);
@@ -152,7 +156,7 @@ export default function Year1Adventure({ year1, onExit }) {
     noteFirstInteraction();
     const itemPart = item.parts[index];
     for (const soundId of itemPart.soundIds || []) {
-      await recordings.playSound(soundId);
+      await recordings.playSound(soundId, { allowTts: false });
     }
     setJoinedCount(count => count + 1);
   }
@@ -179,7 +183,7 @@ export default function Year1Adventure({ year1, onExit }) {
 
     setSessionCorrect(count => count + 1);
     setCelebrating(true);
-    if (!item.pseudo) recordings.playSound(`word:${item.word}`);
+    if (!item.pseudo) recordings.playSound(`word:${item.word}`, { allowTts: false });
 
     window.setTimeout(() => {
       if (round + 1 >= items.length) {
@@ -208,8 +212,22 @@ export default function Year1Adventure({ year1, onExit }) {
             <p className="eyebrow">DINO ROAD BUILDERS</p>
             <h1>Build the sounds.<br />Drive the word.</h1>
             <p className="child-instruction">Join each blue sound block, then read the finished word to Dad.</p>
-            <button className="adventure-start" onClick={startSession}>
-              Build today’s road <span>▶</span>
+            {!voiceReady && (
+              <div className={`voice-bank-status ${voiceLoading ? 'is-loading' : ''}`}>
+                <strong>{voiceLoading ? 'Loading Dad’s voice…' : 'Dad’s voice is not connected'}</strong>
+                <span>
+                  {voiceLoading
+                    ? 'The road will open when the sound bank is ready.'
+                    : 'Connect the family recordings before starting.'}
+                </span>
+                {!voiceLoading && <button type="button" onClick={onOpenSettings}>Open Settings</button>}
+              </div>
+            )}
+            {voiceReady && (
+              <div className="voice-bank-ready">Dad’s recorded sounds are ready ✓</div>
+            )}
+            <button className="adventure-start" onClick={startSession} disabled={!voiceReady || voiceLoading}>
+              {voiceLoading ? 'Loading sounds…' : 'Build today’s road'} <span>{voiceReady ? '▶' : '🔒'}</span>
             </button>
             <div className="map-stats">
               <span><strong>{year1.stats.completedItems}</strong> words built</span>

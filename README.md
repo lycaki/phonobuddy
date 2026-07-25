@@ -15,6 +15,9 @@ Letters and Sounds profile for 2026-27.
 - Pseudo-words remain disabled until a parent reviews and approves the visible bank.
 - Split digraphs use true one-letter transformations such as `hop -> hope`.
 - Dad remains the correctness judge. No ASR or lexical guessing is used.
+- Year 1 never substitutes browser TTS for a missing phoneme or word recording.
+- A returning device automatically restores the cloud sound bank when its local
+  pure-sound recordings are incomplete; the adventure stays locked until ready.
 - Every attempt is append-only and records presentation time, first touch,
   verdict and retries. Latency is contextual, not mastery by itself.
 - Parent controls can temporarily select any teaching block for testing.

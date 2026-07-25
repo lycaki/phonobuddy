@@ -268,7 +268,11 @@ export default function App() {
           })()}
 
           {screen === "year1" && (
-            <Year1Adventure year1={year1} onExit={() => setScreen("home")} />
+            <Year1Adventure
+              year1={year1}
+              onExit={() => setScreen("home")}
+              onOpenSettings={() => setScreen("settings")}
+            />
           )}
 
           {/* SESSION SCREEN */}

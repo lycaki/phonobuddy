@@ -219,7 +219,70 @@ summary {
   border-bottom-width: 3px;
 }
 
+.adventure-start:disabled {
+  color: #d6e2ea;
+  background: #718596;
+  border-bottom-color: #455667;
+  box-shadow: none;
+  cursor: default;
+}
+
+.adventure-start:disabled:active {
+  transform: none;
+  border-bottom-width: 7px;
+}
+
 .adventure-start span { margin-left: 8px; }
+
+.voice-bank-status,
+.voice-bank-ready {
+  width: min(100%, 440px);
+  margin: 0 auto 12px;
+  padding: 11px 13px;
+  border-radius: 12px;
+}
+
+.voice-bank-status {
+  color: #67461d;
+  background: #f5d996;
+  border: 3px solid #c99838;
+}
+
+.voice-bank-status.is-loading {
+  color: #194f69;
+  background: #ccecff;
+  border-color: #5da7cf;
+}
+
+.voice-bank-status strong,
+.voice-bank-status span {
+  display: block;
+}
+
+.voice-bank-status span {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.voice-bank-status button {
+  min-height: 42px;
+  margin-top: 9px;
+  padding: 7px 16px;
+  color: white;
+  background: #315f86;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.voice-bank-ready {
+  color: #256833;
+  background: #d8f0cf;
+  border: 2px solid #80bf72;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14px;
+}
 
 .map-stats {
   display: flex;

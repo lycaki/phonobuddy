@@ -1,15 +1,14 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, ListRestart } from 'lucide-react';
 import { RecordingsContext } from '../../context/RecordingsContext';
 import {
   YEAR1_BLOCKS,
   YEAR1_GPC_BY_ID,
   YEAR1_PROFILE,
   YEAR1_PSEUDO_WORDS,
-  YEAR1_WORDS,
   getYear1Coverage,
 } from '../../data/year1Profile';
-
-const SESSION_LENGTH = 6;
+import { chooseSessionItems, getBlockReadiness, requiredSessionSounds } from '../../utils/year1Session';
 
 function VoxelDino({ walking = false }) {
   return (
@@ -32,27 +31,6 @@ function VoxelRover({ driving = false }) {
       <div className="rover-wheel rover-wheel-two" />
     </div>
   );
-}
-
-function chooseSessionItems(blockId, completedCount, pseudoApproved) {
-  const current = YEAR1_WORDS.filter(item => item.block === blockId);
-  const review = YEAR1_WORDS.filter(item => item.block < blockId).slice(-8);
-  const pool = current.length ? [...current, ...review] : YEAR1_WORDS.filter(item => item.block === 0);
-  const offset = pool.length ? completedCount % pool.length : 0;
-  const rotated = [...pool.slice(offset), ...pool.slice(0, offset)];
-  const chosen = [];
-
-  for (let index = 0; chosen.length < SESSION_LENGTH && rotated.length; index += 1) {
-    chosen.push(rotated[index % rotated.length]);
-  }
-
-  if (pseudoApproved && blockId >= 2) {
-    const availablePseudo = YEAR1_PSEUDO_WORDS.filter(item => item.block <= blockId);
-    if (availablePseudo.length) {
-      chosen[SESSION_LENGTH - 1] = availablePseudo[completedCount % availablePseudo.length];
-    }
-  }
-  return chosen;
 }
 
 function FocusedWord({ item }) {
@@ -101,7 +79,8 @@ function RoadPiece({ itemPart, index, joined, next, onJoin }) {
   );
 }
 
-export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
+export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadStories }) {
+  const { autoProgress, attempts, setSelectedBlock } = year1;
   const recordings = useContext(RecordingsContext);
   const [stage, setStage] = useState('map');
   const [items, setItems] = useState([]);
@@ -111,6 +90,17 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
   const [celebrating, setCelebrating] = useState(false);
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [retries, setRetries] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
+  const busyRef = useRef(false);
+  const generation = useRef(0);
+  const advanceTimer = useRef(null);
+  const audioController = useRef(null);
+  const starting = useRef(false);
+  const autoHandled = useRef(false);
+  const [sessionBlockId, setSessionBlockId] = useState(0);
+  const [sessionKey, setSessionKey] = useState(0);
+  const [autoNotice, setAutoNotice] = useState('');
   const readyAt = useRef(null);
   const firstInteractionAt = useRef(null);
 
@@ -120,9 +110,28 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
     () => getYear1Coverage(recordings.recordingIds),
     [recordings.recordingIds],
   );
-  const expectedReusableSounds = coverage.requiredSoundIds.length - coverage.questionableSounds.length;
-  const voiceReady = coverage.reusableSounds.length >= expectedReusableSounds;
+  const nextItems = useMemo(() => chooseSessionItems(block.id, year1.batchOffsets[block.id] || 0, year1.pseudoApproved),
+    [block.id, year1.batchOffsets, year1.pseudoApproved]);
+  const missing = requiredSessionSounds(nextItems).filter(id =>
+    !['schwa', 'th_voiced'].includes(id) && !recordings.recordingIds.has(id));
+  const voiceReady = missing.length === 0;
   const voiceLoading = recordings.syncStatus === 'downloading';
+  const readiness = getBlockReadiness(block.id, year1.attempts);
+
+  useEffect(() => () => {
+    generation.current += 1;
+    clearTimeout(advanceTimer.current);
+    audioController.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    if (stage !== 'complete' || autoHandled.current) return;
+    autoHandled.current = true;
+    if (autoProgress && sessionBlockId < YEAR1_BLOCKS.at(-1).id && getBlockReadiness(sessionBlockId, attempts).ready) {
+      setSelectedBlock(sessionBlockId + 1);
+      setAutoNotice(`Next section ready: ${YEAR1_BLOCKS[sessionBlockId + 1].label}`);
+    }
+  }, [stage, sessionBlockId, autoProgress, attempts, setSelectedBlock]);
 
   useEffect(() => {
     if (stage !== 'mission' || !item) return;
@@ -132,15 +141,70 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
     setTransformed(item.mission !== 'transform');
     setCelebrating(false);
     setRetries(0);
-  }, [stage, round, item]);
+    setBusy(false);
+    busyRef.current = false;
+    setNotice('');
+    return () => {
+      generation.current += 1;
+      clearTimeout(advanceTimer.current);
+      audioController.current?.abort();
+    };
+  }, [stage, round, item, sessionKey]);
 
-  function startSession() {
-    if (!voiceReady || voiceLoading) return;
-    setItems(chooseSessionItems(year1.selectedBlock, year1.stats.completedItems, year1.pseudoApproved));
-    setRound(0);
-    setSessionCorrect(0);
-    setStage('mission');
+  function stopSession() {
+    generation.current += 1;
+    clearTimeout(advanceTimer.current);
+    audioController.current?.abort();
+    setStage('map');
   }
+
+  async function startSession() {
+    if (starting.current) return;
+    if (!voiceReady) { stopSession(); return; }
+    starting.current = true;
+    generation.current += 1;
+    clearTimeout(advanceTimer.current);
+    audioController.current?.abort();
+    busyRef.current = true;
+    setBusy(true);
+    const token = generation.current;
+    try {
+      const next = await year1.takeNextBatch();
+      if (generation.current !== token) return;
+      setItems(next);
+      setRound(0);
+      setSessionCorrect(0);
+      setSessionBlockId(block.id);
+      setSessionKey(key => key + 1);
+      autoHandled.current = false;
+      setAutoNotice('');
+      setStage('mission');
+    } catch {
+      setStage('map');
+      setNotice('The next batch could not be saved. Try again without clearing website data.');
+    } finally {
+      starting.current = false;
+    }
+  }
+
+  function selectBlock(value) {
+    stopSession();
+    year1.setSelectedBlock(value);
+  }
+
+  const parentNavigation = <nav className="practice-controls" aria-label="Parent practice controls">
+    <label htmlFor="year1-block">Practice point</label>
+    <select id="year1-block" value={block.id} onChange={event => selectBlock(event.target.value)}>
+      {YEAR1_BLOCKS.map(entry => <option key={entry.id} value={entry.id}>{entry.id + 1}. {entry.term}: {entry.label}</option>)}
+    </select>
+    <div className="practice-navigation">
+      <button onClick={() => selectBlock(block.id - 1)} disabled={block.id === 0} title="Previous section" aria-label="Previous section"><ArrowLeft size={20} /></button>
+      <button onClick={startSession}><ListRestart size={20} /> Next batch</button>
+      <button onClick={() => selectBlock(block.id + 1)} disabled={block.id === YEAR1_BLOCKS.at(-1).id}>Next section <ArrowRight size={20} /></button>
+    </div>
+    <label className="auto-progression"><input type="checkbox" checked={year1.autoProgress} onChange={event => year1.setAutoProgress(event.target.checked)} /> Auto next section</label>
+    <small>{readiness.secure} of {readiness.total} section words read correctly twice without a retry. Auto progression checks at the end of a road.</small>
+  </nav>;
 
   function noteFirstInteraction() {
     if (!firstInteractionAt.current) firstInteractionAt.current = Date.now();
@@ -152,18 +216,48 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
   }
 
   async function joinPiece(index) {
-    if (!item || index !== joinedCount || !transformed) return;
+    if (!item || busyRef.current || celebrating || index !== joinedCount || !transformed) return;
+    busyRef.current = true;
+    setBusy(true);
+    const token = generation.current;
+    audioController.current = new AbortController();
     noteFirstInteraction();
     const itemPart = item.parts[index];
-    for (const soundId of itemPart.soundIds || []) {
-      await recordings.playSound(soundId, { allowTts: false });
+    try {
+      for (const soundId of itemPart.soundIds || []) {
+        const played = await recordings.playSound(soundId, {
+          allowTts: false, waitForEnd: true, signal: audioController.current.signal,
+        });
+        if (generation.current !== token) return;
+        if (!played) setNotice('This clip could not play. Dad can say the sound, or skip this word.');
+      }
+    } catch {
+      if (generation.current === token) setNotice('Sound unavailable. Dad can say it, or skip this word.');
+    } finally {
+      if (generation.current === token) {
+        setJoinedCount(index + 1);
+        busyRef.current = false;
+        setBusy(false);
+      }
     }
-    setJoinedCount(count => count + 1);
+  }
+
+  function nextMission() {
+    generation.current += 1;
+    clearTimeout(advanceTimer.current);
+    audioController.current?.abort();
+    if (round + 1 >= items.length) setStage('complete');
+    else setRound(round + 1);
   }
 
   async function judge(correct) {
-    if (!item) return;
-    await year1.recordAttempt({
+    if (!item || busyRef.current || celebrating || joinedCount !== item.parts.length) return;
+    busyRef.current = true;
+    setBusy(true);
+    setNotice('');
+    const token = generation.current;
+    try {
+      await year1.recordAttempt({
       itemId: item.id,
       itemType: item.pseudo ? 'pseudo' : 'real',
       mode: item.mission === 'transform' ? 'split-digraph-transform' : 'sound-road',
@@ -171,26 +265,38 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
       retries,
       presentationReadyAt: readyAt.current,
       firstInteractionAt: firstInteractionAt.current,
-    });
+      });
+    } catch {
+      if (generation.current === token) {
+        setNotice('This answer could not be saved on this device. Try Yes again, or stop. Do not clear website data.');
+        busyRef.current = false;
+        setBusy(false);
+      }
+      return;
+    }
+    if (generation.current !== token) return;
 
     if (!correct) {
       setRetries(count => count + 1);
       setJoinedCount(0);
       firstInteractionAt.current = null;
       readyAt.current = Date.now();
+      busyRef.current = false;
+      setBusy(false);
       return;
     }
 
     setSessionCorrect(count => count + 1);
     setCelebrating(true);
-    if (!item.pseudo) recordings.playSound(`word:${item.word}`, { allowTts: false });
+    if (!item.pseudo) {
+      audioController.current = new AbortController();
+      recordings.playSound(`word:${item.word}`, {
+        allowTts: false, waitForEnd: true, signal: audioController.current.signal,
+      }).catch(() => {});
+    }
 
-    window.setTimeout(() => {
-      if (round + 1 >= items.length) {
-        setStage('complete');
-      } else {
-        setRound(index => index + 1);
-      }
+    advanceTimer.current = window.setTimeout(() => {
+      if (generation.current === token) nextMission();
     }, 1250);
   }
 
@@ -199,7 +305,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
       <div className="year1-adventure">
         <header className="adventure-topbar">
           <button className="quiet-button" onClick={onExit}>← Home</button>
-          <span className="profile-chip">Year 1 · Phase 5</span>
+          <span className="profile-chip">Year 1 · {block.id === 0 ? 'Sound review' : 'Phase 5'}</span>
         </header>
 
         <section className="adventure-map-card">
@@ -218,7 +324,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
                 <span>
                   {voiceLoading
                     ? 'The road will open when the sound bank is ready.'
-                    : 'Connect the family recordings before starting.'}
+                    : `Missing sounds for this road: ${missing.join(', ')}. Connect the family recordings.`}
                 </span>
                 {!voiceLoading && <button type="button" onClick={onOpenSettings}>Open Settings</button>}
               </div>
@@ -226,12 +332,13 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
             {voiceReady && (
               <div className="voice-bank-ready">Dad’s recorded sounds are ready ✓</div>
             )}
-            <button className="adventure-start" onClick={startSession} disabled={!voiceReady || voiceLoading}>
-              {voiceLoading ? 'Loading sounds…' : 'Build today’s road'} <span>{voiceReady ? '▶' : '🔒'}</span>
+            <button className="adventure-start" onClick={startSession} disabled={!voiceReady}>
+              {!voiceReady && voiceLoading ? 'Loading sounds…' : 'Build today’s road'} <span>{voiceReady ? '▶' : '🔒'}</span>
             </button>
+            <button className="quiet-button" onClick={onReadStories}>Read a story</button>
             <div className="map-stats">
               <span><strong>{year1.stats.completedItems}</strong> words built</span>
-              <span><strong>{year1.stats.accuracy || '—'}</strong>{year1.stats.total ? '%' : ''} accuracy</span>
+              <span><strong>{year1.stats.total ? year1.stats.accuracy : '—'}</strong>{year1.stats.total ? '%' : ''} accuracy</span>
               <span><strong>6</strong> quick missions</span>
             </div>
           </div>
@@ -246,19 +353,12 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
           <div className="zone-code">{block.shortLabel}</div>
         </section>
 
+        {notice && <p className="mission-notice" role="status">{notice}</p>}
+        {parentNavigation}
+
         <details className="parent-drawer">
           <summary>Parent controls & profile</summary>
           <div className="parent-drawer-content">
-            <label htmlFor="year1-block">Practice point</label>
-            <select
-              id="year1-block"
-              value={year1.selectedBlock}
-              onChange={event => year1.setSelectedBlock(event.target.value)}
-            >
-              {YEAR1_BLOCKS.map(entry => (
-                <option key={entry.id} value={entry.id}>{entry.term}: {entry.label}</option>
-              ))}
-            </select>
             <p>
               <strong>{YEAR1_PROFILE.label}</strong> · {YEAR1_PROFILE.status}. Confirm the school’s current
               programme and point in September, then update this profile rather than changing the game.
@@ -266,9 +366,9 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
             <div className="coverage-grid">
               <span><strong>{coverage.reusableSounds.length}</strong> reusable sound clips</span>
               <span><strong>{coverage.recordedWords.length}</strong> Year 1 words recorded</span>
-              <span><strong>{coverage.missingSounds.length}</strong> sound fallbacks</span>
+              <span><strong>{coverage.missingSounds.length}</strong> missing sound clips</span>
               <span><strong>{coverage.questionableSounds.length}</strong> contextual clips to review</span>
-              <span><strong>{coverage.dadModelWords.length}</strong> Dad/TTS word fallbacks</span>
+              <span><strong>{coverage.dadModelWords.length}</strong> words for Dad to model</span>
             </div>
             <div className="pseudo-approval">
               <h3>Pseudo-word review</h3>
@@ -299,7 +399,11 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
         <VoxelDino walking />
         <h1>Road complete!</h1>
         <p>You built {sessionCorrect} of {items.length} words.</p>
+        {autoNotice && <p role="status">{autoNotice}</p>}
+        <button className="adventure-start" onClick={startSession} disabled={!voiceReady}>Build another road</button>
+        <button className="quiet-button" onClick={onReadStories}>Read a story</button>
         <button className="adventure-start" onClick={() => setStage('map')}>Back to the map</button>
+        {parentNavigation}
       </div>
     );
   }
@@ -310,7 +414,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
   return (
     <div className="year1-adventure mission-screen">
       <header className="adventure-topbar">
-        <button className="quiet-button" onClick={() => setStage('map')}>← Stop</button>
+        <button className="quiet-button" onClick={stopSession}>← Stop</button>
         <div className="mission-progress" aria-label={`Mission ${round + 1} of ${items.length}`}>
           <span style={{ width: `${progressPercent}%` }} />
         </div>
@@ -351,7 +455,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
                   itemPart={itemPart}
                   index={index}
                   joined={index < joinedCount}
-                  next={index === joinedCount}
+                  next={index === joinedCount && !busy && !celebrating}
                   onJoin={joinPiece}
                 />
               ))}
@@ -361,8 +465,8 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
               <div className="dad-judge">
                 <p>Dad: did Logan read it?</p>
                 <div>
-                  <button className="try-again-button" onClick={() => judge(false)}>Try again</button>
-                  <button className="correct-button" onClick={() => judge(true)}>Yes ✓</button>
+                  <button className="try-again-button" disabled={busy} onClick={() => judge(false)}>Try again</button>
+                  <button className="correct-button" disabled={busy} onClick={() => judge(true)}>{busy ? 'Saving on this device...' : 'Yes ✓'}</button>
                 </div>
               </div>
             )}
@@ -371,11 +475,15 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings }) {
               <div className="word-powered">
                 <span>{item.pseudo ? 'Dino rescued!' : 'Rover powered!'}</span>
                 <b>{item.word}</b>
+                <button className="quiet-button" onClick={nextMission}>Next word →</button>
               </div>
             )}
           </>
         )}
       </main>
+      {notice && <p className="mission-notice" role="status">{notice}</p>}
+      {!celebrating && <button className="quiet-button" onClick={nextMission}>Skip word →</button>}
+      {parentNavigation}
     </div>
   );
 }

@@ -1,0 +1,70 @@
+.year1-reading { background: #f7fbfa; color: #213830; border-radius: 8px; padding: 24px; min-width: 0; letter-spacing: 0; }
+.year1-reading button, .reading-return { font: inherit; cursor: pointer; }
+.year1-reading button:disabled { opacity: .5; cursor: default; }
+.year1-reading button:focus-visible, .year1-reading select:focus-visible, .year1-reading summary:focus-visible { outline: 3px solid #b24062; outline-offset: 3px; }
+.reading-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.reading-heading p { margin: 0; color: #476255; font-size: 13px; }
+.reading-heading h1 { font: 32px 'Fredoka', sans-serif; margin: 4px 0 24px; }
+.year1-reading select { width: 100%; font: inherit; border: 1px solid #80988d; border-radius: 4px; background: white; color: #213830; min-height: 48px; padding: 8px; }
+.section-choice { display: block; font-size: 14px; margin-bottom: 6px; }
+.reading-section-title { padding: 24px 0 16px; }
+.reading-section-title h2 { font-size: 21px; margin: 0 0 4px; }
+.reading-section-title span { color: #50655a; font-size: 14px; }
+.story-list { display: grid; gap: 12px; }
+.story-entry { border: 1px solid #c3d2ca; border-left: 5px solid #2e826b; border-radius: 8px; padding: 18px 12px; background: white; color: #213830; display: grid; grid-template-columns: 28px minmax(0, 1fr) 24px; align-items: center; text-align: left; gap: 14px; }
+.story-entry:nth-child(2) { border-left-color: #b24062; }
+.story-entry:nth-child(3) { border-left-color: #477ac0; }
+.story-entry strong { display: block; font-size: 20px; line-height: 1.35; margin: 5px 0; overflow-wrap: anywhere; }
+.story-entry small { display: block; color: #50655a; font-size: 12px; }
+.story-focus { display: block; margin: 6px 0; color: #286c59; font-size: 15px; }
+.reading-parent { border-top: 1px solid #c3d2ca; padding: 18px 0 0; margin-top: 24px; font-size: 14px; line-height: 1.6; }
+.reading-parent summary { cursor: pointer; min-height: 32px; }
+.reading-return { display: flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #4ecdc4; padding: 16px 0; }
+.year1-reading .reading-return { color: #286c59; }
+.reader-bar { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 10px; padding-bottom: 16px; border-bottom: 1px solid #c3d2ca; }
+.reader-bar span { font-size: 14px; text-align: center; overflow-wrap: anywhere; }
+.reader-bar button, .reader-navigation button { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid #9db4a8; border-radius: 8px; background: white; color: #213830; }
+.reader-options { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 12px; margin: 20px 0; font-size: 14px; }
+.reader-options label { display: flex; align-items: center; min-height: 44px; gap: 8px; }
+.reader-options input { width: 20px; height: 20px; accent-color: #2e826b; }
+.reader-title { font-size: 20px; font-weight: normal; color: #476255; margin: 0 0 20px; }
+.story-sentence { font-family: 'Andika', sans-serif; font-size: 32px; line-height: 1.85; min-height: 220px; overflow-wrap: anywhere; }
+.story-sentence button { display: inline; font: inherit; color: inherit; padding: 0 2px; margin: 0; border: 0; background: transparent; border-radius: 3px; }
+.story-sentence .focus-word { background: #d9f1e8; color: #164e3c; }
+.story-sentence .support-word { text-decoration: underline dotted #a24a68; text-underline-offset: 7px; }
+.reader-notice { min-height: 48px; color: #823551; font-size: 16px; margin: 12px 0; }
+.reader-navigation { display: grid; grid-template-columns: 48px minmax(40px, 1fr) 48px; gap: 20px; align-items: center; }
+.reader-navigation progress { width: 100%; height: 10px; accent-color: #2e826b; }
+.story-question { padding: 16px 0 24px; border-top: 1px solid #c3d2ca; }
+.story-question h2 { font-size: 20px; margin: 0 0 8px; }
+.story-question summary { cursor: pointer; font-size: 14px; }
+.story-finish { min-height: 320px; text-align: center; padding: 24px 0; }
+.story-finish h1 { font-size: 28px; }
+.story-finish button { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 12px auto; min-height: 48px; padding: 8px 20px; background: #2e826b; color: white; border: 0; border-radius: 8px; }
+.story-print { display: none; }
+.mission-notice { background: #fff7d9; color: #493820; padding: 14px; border-radius: 4px; }
+.dad-judge button { white-space: normal; overflow-wrap: anywhere; }
+.practice-controls { padding: 18px 16px; margin: 20px 0; width: 100%; box-sizing: border-box; background: #f7fbfa; border-top: 1px solid #708d82; color: #213830; text-align: left; }
+.practice-controls > label:first-child { display: block; margin-bottom: 6px; font-size: 14px; }
+.practice-controls select { width: 100%; min-height: 48px; border-radius: 4px; font: inherit; background: white; color: #213830; padding: 8px; }
+.practice-navigation { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0; }
+.practice-navigation button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 8px 12px; background: white; color: #213830; border: 1px solid #80988d; border-radius: 6px; font: inherit; cursor: pointer; }
+.practice-navigation button:disabled { opacity: .5; cursor: default; }
+.auto-progression { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.auto-progression input { width: 20px; height: 20px; accent-color: #2e826b; }
+.practice-controls small { display: block; max-width: 560px; line-height: 1.5; }
+@media (max-width: 480px) {
+  .year1-reading { padding: 16px; }
+  .story-entry { gap: 10px; padding: 14px 10px; }
+  .story-entry strong { font-size: 18px; }
+  .story-sentence { font-size: 28px; min-height: 250px; }
+}
+@media print {
+  body * { visibility: hidden; }
+  .story-print, .story-print * { visibility: visible; }
+  .story-print { display: block; position: absolute; inset: 0; background: white; color: black; font: 18pt/1.5 'Andika', sans-serif; }
+  .story-print h1 { font-size: 24pt; }
+  .story-print h2 { font-size: 20pt; }
+  .story-print p { break-inside: avoid; }
+  .reader-screen, .reader-bar { display: none; }
+}

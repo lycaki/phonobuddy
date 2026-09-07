@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { saveRecordingBlob, getRecordingBlob, getAllRecordingIds, getRecordingRecord } from '../utils/storage';
+import { saveRecordingBlob, getRecordingBlob, getAllRecordingIds, addMissingRecording } from '../utils/storage';
 import { speakPhoneme } from '../utils/speech';
+import { playRecordedAudio } from '../utils/recordedAudio';
 
 export function useRecordings(familyCode) {
   const [recordingIds, setRecordingIds] = useState(new Set());
@@ -69,9 +70,7 @@ export function useRecordings(familyCode) {
         urlCache.current[id] = url;
       }
       try {
-        const audio = new Audio(url);
-        await audio.play();
-        return true;
+        return await playRecordedAudio(url, options);
       } catch (e) {
         console.warn(`[PhonoBuddy] Audio play failed for "${id}":`, e);
         // Fall through to TTS
@@ -99,13 +98,7 @@ export function useRecordings(familyCode) {
       const remoteRecordings = await downloadAllRecordingEntries(code);
       let saved = 0;
       for (const [recordingId, entry] of Object.entries(remoteRecordings)) {
-        const local = await getRecordingRecord(recordingId);
-        const localTimestamp = local?.timestamp || 0;
-        const remoteTimestamp = entry.updated || 0;
-        if (!local?.blob || remoteTimestamp >= localTimestamp) {
-          await saveRecordingBlob(recordingId, entry.blob, remoteTimestamp || Date.now());
-          saved++;
-        }
+        if (await addMissingRecording(recordingId, entry.blob, entry.updated || 0)) saved++;
       }
       const keys = await getAllRecordingIds();
       setRecordingIds(new Set(keys));

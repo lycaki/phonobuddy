@@ -1,4 +1,5 @@
-import { useState, useContext, useMemo } from 'react';
+import { useState, useContext, useMemo, useRef, useEffect } from 'react';
+import { SkipForward } from 'lucide-react';
 import { WORDS, PHONEMES, TRICKY_WORDS } from '../data/phonemes';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { RecordingsContext } from '../context/RecordingsContext';
@@ -10,6 +11,8 @@ export default function WordPractice({ progress }) {
   const [showTricky, setShowTricky] = useState(false);
   const [showConfusions, setShowConfusions] = useState(false);
   const { playSound } = useContext(RecordingsContext);
+  const audioTimers = useRef([]);
+  useEffect(() => () => audioTimers.current.forEach(clearTimeout), []);
 
   const confusionSets = [
     { label: "b / d", ids: ["b", "d"] },
@@ -45,6 +48,8 @@ export default function WordPractice({ progress }) {
   }, [selectedPhase]);
 
   function openWord(word) {
+    audioTimers.current.forEach(clearTimeout);
+    audioTimers.current = [];
     setSelectedWord(word);
     setBlendStep(0);
   }
@@ -53,10 +58,10 @@ export default function WordPractice({ progress }) {
     const next = blendStep + 1;
     setBlendStep(next);
     if (next === 1) {
-      selectedWord.phonemes.forEach((p, i) => setTimeout(() => playSound(p), i * 450));
+      selectedWord.phonemes.forEach((p, i) => audioTimers.current.push(setTimeout(() => playSound(p), i * 450)));
     } else if (next === 2) {
       // Use recorded word if available, falls back to TTS inside playSound
-      setTimeout(() => playSound(`word:${selectedWord.word}`), 300);
+      audioTimers.current.push(setTimeout(() => playSound(`word:${selectedWord.word}`), 300));
     }
   }
 
@@ -101,6 +106,12 @@ export default function WordPractice({ progress }) {
       {/* Word detail view */}
       {selectedWord ? (
         <div style={{textAlign:"center"}}>
+          <button onClick={() => {
+            const pool = decodableWords.includes(selectedWord) ? decodableWords : filteredWords;
+            openWord(pool[(pool.indexOf(selectedWord) + 1) % pool.length]);
+          }} style={{display:'flex',alignItems:'center',gap:8,margin:'0 auto 16px',padding:'12px 20px',borderRadius:8,border:'1px solid #4ecdc4',background:'#1a2744',color:'#4ecdc4',font:'inherit',cursor:'pointer'}}>
+            <SkipForward size={20} /> Skip word
+          </button>
           {/* Big word display with blend animation */}
           <div style={{background:"rgba(26,39,68,0.6)",borderRadius:24,padding:32,backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.05)",marginBottom:20}}>
             <div style={{fontSize:56,marginBottom:8}}>{selectedWord.image}</div>
@@ -159,7 +170,7 @@ export default function WordPractice({ progress }) {
             })}
           </div>
 
-          <button onClick={() => setSelectedWord(null)} style={{background:"transparent",border:"2px solid #a0aec0",borderRadius:12,padding:"10px 24px",fontSize:16,color:"#a0aec0",cursor:"pointer",fontFamily:"'Fredoka'"}}>
+          <button onClick={() => openWord(null)} style={{background:"transparent",border:"2px solid #a0aec0",borderRadius:12,padding:"10px 24px",fontSize:16,color:"#a0aec0",cursor:"pointer",fontFamily:"'Fredoka'"}}>
             ← Back to words
           </button>
         </div>

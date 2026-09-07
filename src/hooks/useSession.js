@@ -63,8 +63,15 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   const activitiesRef = useRef([]);
   const activityIndexRef = useRef(0);
   const isAdvancingRef = useRef(false); // guard against double-fire
+  const advanceTimer = useRef(null);
+  const activeRef = useRef(false);
   const sessionModeRef = useRef("learn");
   const sessionCountRef = useRef(sessionCount);
+
+  useEffect(() => () => {
+    clearTimeout(advanceTimer.current);
+    activeRef.current = false;
+  }, []);
 
   useEffect(() => {
     if (isActive) {
@@ -84,6 +91,9 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
 
   // ─── START LEARNING SESSION ───
   const startSession = useCallback((options = {}) => {
+    clearTimeout(advanceTimer.current);
+    activeRef.current = true;
+    resultsRef.current = [];
     const isShort = options.length === "short";
     const activities = [];
     const gap = getCurriculumGap(progress);
@@ -181,6 +191,9 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     const introduced = PHONEMES.filter(p => progress[p.id]?.introduced);
 
     if (introduced.length === 0) return; // nothing to assess
+    clearTimeout(advanceTimer.current);
+    activeRef.current = true;
+    resultsRef.current = [];
 
     // Test all introduced sounds, prioritise those not recently assessed
     const sorted = introduced.sort((a, b) => {
@@ -216,6 +229,9 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
 
   // Manual end session (exit button)
   const endSession = useCallback(() => {
+    if (!activeRef.current) return;
+    activeRef.current = false;
+    clearTimeout(advanceTimer.current);
     isAdvancingRef.current = false;
     setIsActive(false);
     incrementSessionCount();
@@ -235,6 +251,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   // ─── ADVANCE: the one function that moves to next activity ───
   // Uses refs directly, guarded against double-fire
   const doAdvance = useCallback(() => {
+    if (!activeRef.current) return;
     const idx = activityIndexRef.current;
     const acts = activitiesRef.current;
     const nextIdx = idx + 1;
@@ -247,6 +264,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     } else {
       isAdvancingRef.current = false;
       // End session
+      activeRef.current = false;
       setIsActive(false);
       incrementSessionCount();
 
@@ -280,21 +298,22 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
   }, [incrementSessionCount]);
 
   const advanceActivity = useCallback((delay = 500) => {
-    if (isAdvancingRef.current) return; // already advancing — ignore duplicate
+    if (!activeRef.current || isAdvancingRef.current) return;
     isAdvancingRef.current = true;
     if (delay <= 0) {
       doAdvance();
     } else {
-      setTimeout(doAdvance, delay);
+      advanceTimer.current = setTimeout(doAdvance, delay);
     }
   }, [doAdvance]);
 
-  const handleActivityResult = useCallback((correct, confusedId) => {
-    if (isAdvancingRef.current) return; // guard against double-call
+  const handleActivityResult = useCallback((correct, confusedId, sourceActivity) => {
+    if (!activeRef.current || isAdvancingRef.current) return;
 
     const activity = activitiesRef.current[activityIndexRef.current];
-    if (!activity) return;
-    setSessionResults(prev => [...prev, { activity, correct }]);
+    if (!activity || (sourceActivity && sourceActivity !== activity)) return;
+    resultsRef.current = [...resultsRef.current, { activity, correct }];
+    setSessionResults(resultsRef.current);
 
     if (activity.type === "identify" && activity.phoneme) {
       const pid = activity.phoneme.id;
@@ -336,8 +355,9 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
     advanceActivity(1200);
   }, [updatePhonemeProgress, advanceActivity]);
 
-  const handleIntroComplete = useCallback((phoneme) => {
-    if (isAdvancingRef.current) return; // guard
+  const handleIntroComplete = useCallback((phoneme, sourceActivity) => {
+    if (!activeRef.current || isAdvancingRef.current) return;
+    if (sourceActivity && sourceActivity !== activitiesRef.current[activityIndexRef.current]) return;
 
     const sc = sessionCountRef.current;
     updatePhonemeProgress(phoneme.id, current => ({
@@ -353,6 +373,7 @@ export function useSession(progress, updatePhonemeProgress, incrementSessionCoun
 
   // Manual skip — parent can force advance if stuck
   const skipActivity = useCallback(() => {
+    clearTimeout(advanceTimer.current);
     isAdvancingRef.current = false; // reset guard so skip always works
     advanceActivity(0);
   }, [advanceActivity]);

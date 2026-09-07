@@ -31,7 +31,7 @@ export default function FamilyCode({ familyCode, onSetCode, onPullFromCloud, syn
       onSetCode(code);
       setPullResult(count);
     } catch {
-      setError('Could not find recordings for that code. Check and try again.');
+      setError('Recordings could not be downloaded. Check the code and connection, then retry. Existing recordings are kept.');
     }
     setJoining(false);
   }
@@ -56,6 +56,19 @@ export default function FamilyCode({ familyCode, onSetCode, onPullFromCloud, syn
     setUploading(false);
   }
 
+  async function handleDownload() {
+    if (!familyCode || joining) return;
+    setJoining(true);
+    setError(null);
+    try {
+      setPullResult(await onPullFromCloud(familyCode));
+    } catch {
+      setError('Download could not finish. Existing recordings are kept. Check the connection and retry.');
+    } finally {
+      setJoining(false);
+    }
+  }
+
   if (!firebaseReady) {
     return (
       <div style={{background:"#1a2744",borderRadius:16,padding:20}}>
@@ -75,7 +88,7 @@ export default function FamilyCode({ familyCode, onSetCode, onPullFromCloud, syn
       {familyCode ? (
         <div>
           <p style={{fontFamily:"'Andika'",fontSize:14,color:"#a0aec0",margin:"0 0 12px"}}>
-            Your recordings sync to the cloud with this code. Use it on another device to download them.
+            Uploads and downloads add missing recordings only. Existing clips on each device and in the cloud are kept. An intentional new recording can replace that sound in the cloud.
           </p>
           <div style={{background:"#0f1729",borderRadius:12,padding:16,textAlign:"center",marginBottom:16}}>
             <div style={{fontFamily:"'Fredoka'",fontSize:36,color:"#4ecdc4",letterSpacing:8}}>{familyCode}</div>
@@ -106,6 +119,9 @@ export default function FamilyCode({ familyCode, onSetCode, onPullFromCloud, syn
           )}
 
           {/* Status indicators */}
+          <button onClick={handleDownload} disabled={joining} style={{width:'100%',minHeight:48,background:'#1a2744',border:'2px solid #4ecdc4',borderRadius:8,color:'#4ecdc4',font:'inherit',cursor:'pointer',marginBottom:12}}>
+            {joining ? 'Downloading...' : 'Download missing recordings'}
+          </button>
           {syncStatus === 'uploading' && <p style={{fontFamily:"'Andika'",fontSize:13,color:"#f4a261",margin:"4px 0"}}>Uploading recording...</p>}
           {syncStatus === 'downloading' && <p style={{fontFamily:"'Andika'",fontSize:13,color:"#4ecdc4",margin:"4px 0"}}>Downloading recordings...</p>}
           {pullResult !== null && <p style={{fontFamily:"'Andika'",fontSize:13,color:"#7bc67e",margin:"4px 0"}}>Downloaded {pullResult} recordings!</p>}

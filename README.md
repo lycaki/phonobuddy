@@ -7,6 +7,9 @@ Letters and Sounds profile for 2026-27.
 
 ## Year 1 starting version
 
+The September update below is the current behaviour. Earlier Reception notes
+remain for reference; they are not the Year 1 progression rules.
+
 - 69 reviewed grapheme-to-phoneme mappings across the public ELS Year 1 order.
 - 72 independently authored real-word items and six parent-review-gated pseudo-words.
 - One block represents one reviewed mapping; mappings can emit a sound sequence.
@@ -16,11 +19,15 @@ Letters and Sounds profile for 2026-27.
 - Split digraphs use true one-letter transformations such as `hop -> hope`.
 - Dad remains the correctness judge. No ASR or lexical guessing is used.
 - Year 1 never substitutes browser TTS for a missing phoneme or word recording.
-- A returning device automatically restores the cloud sound bank when its local
-  pure-sound recordings are incomplete; the adventure stays locked until ready.
+- A returning device downloads missing cloud clips when its local sound bank is
+  incomplete. Existing local recordings are never replaced by a download.
+- Readiness checks the actual sounds needed for the next road, not a global
+  clip count. Missing contextual `schwa`/voiced `th` are modelled by Dad, not TTS.
 - Every attempt is append-only and records presentation time, first touch,
   verdict and retries. Latency is contextual, not mastery by itself.
-- Parent controls can temporarily select any teaching block for testing.
+- Parent controls can select any teaching block, skip a word, or start another
+  batch at any time. Optional automatic progression is off by default.
+- 36 original Year 1 stories cover all 12 sections; the 10 earlier stories remain.
 
 The profile is `els-copnor-provisional-2026`. It records its programme, version,
 source links, review date and provisional status in
@@ -359,7 +366,7 @@ See `monetization/README.md` for the account setup workflow.
 
 ---
 
-## Latest update — 25 April 2026
+## Earlier update — 25 April 2026
 
 Changes made to improve the app for a 5/6-year-old phonics reader while preserving saved recordings, progress, family-code sync, and existing storage:
 
@@ -376,3 +383,107 @@ Changes made to improve the app for a 5/6-year-old phonics reader while preservi
 - Added timestamp-aware recording sync protection: bulk upload/download now skips older copies instead of overwriting newer cloud/device recordings for the same sound.
 - Clarified reset wording so "delete recordings" and "wipe everything" are clearly local-device actions and do not delete cloud/iPad recordings.
 - Recording backups now preserve original timestamps, so restoring an older backup will not make it look newer than recordings already saved in the cloud.
+
+## Latest update - 7 September 2026
+
+### Session and sync fixes
+
+- Fixed `Pull progress` receiving a React click event as its family-code override.
+  Settings now calls explicit wrappers and both progress hooks reject non-string
+  overrides. This caused a misleading "Sync failed - check connection" message.
+- Manual push/pull includes Reception progress AND Year 1 attempt history. Each
+  has a bounded wait and a specific failure message; neither changes recordings.
+- Joining/downloading recordings no longer fails just because progress sync
+  fails afterwards. Existing families have a Download missing recordings button.
+- Year 1 answers are saved locally before proceeding; cloud acknowledgement is
+  no longer awaited by the game. Saved events act as a durable outbox, retried on
+  startup, reconnection and periodically. Event IDs make retries idempotent.
+- Prevented repeated taps and overlapping verdicts from skipping sound blocks or
+  saving duplicate answers. Multi-sound blocks play sequentially. Blocked/failed
+  audio gives a parent message; audio has a timeout and can be interrupted.
+- Stop, skip and new batches cancel pending advancement/audio. Reception practice
+  also rejects stale callbacks, cancels old advance timers and shows its summary
+  even if every activity was skipped. Its first sound choices no longer reset
+  every timer tick. Sound-road tap targets no longer move while waiting for a tap.
+- Fixed the bottom navigation clipping Home/Settings off narrow phone screens.
+
+### Manual and automatic progression
+
+- Skip word is available during every Year 1 word, including before audio plays.
+  Word Practice also has Skip word. Skips do not create a correct/incorrect attempt.
+- The map, mission and completion screens have a numbered section picker,
+  Previous section, Next section and Next batch. No completed score is required
+  for manual selection. Missing recordings return the user to the recording check.
+- Batch cursors are saved per section in `year1BatchOffsets`, independently of
+  scores. Skipping or repeating a session does not continually pick the same first
+  batch. Small banks necessarily repeat some words. Summer reviews the cumulative
+  bank rather than falling back to only frog/clock/splash/twist.
+- Optional Auto next section is saved as `year1AutoProgress`. At the end of a road,
+  it advances at most one section if every real word in that section has two most
+  recent correct attempts without retries. This is a family practice heuristic,
+  not a school assessment. Manual selection remains available in either mode.
+
+### Year 1 reading material
+
+- Added `src/data/year1Stories.js`: three original stories for each of the 12
+  sections, with all 72 section words appearing in their matching section.
+- Short, one-sentence pages, optional recorded-word help, section-word highlighting,
+  a conservative list of extra/support words, and one discussion question per story.
+  Additional words are for shared reading, not claimed to be independently decodable.
+- No guessed readiness percentage or automatic age/calendar unlock. The selected
+  section is shared with practice; Phase 2-4 review is the starting point for a new
+  device. Confirm the current school programme and teaching point with the teacher.
+- The ELS public consolidation guidance supports beginning Year 1 with review:
+  https://cdn.oxfordowl.co.uk/2022/06/22/09/21/32/91c4527f-89c9-4179-842e-6a80a58b9fcd/ELS_Y1_ConsolidatingLearning.pdf
+  The Copnor 2026-27 profile remains provisional, not school-confirmed.
+- Reading places and reread counts use new `year1Story:<story-id>` settings on
+  this browser. They survive reloads but do not yet sync across devices. Existing
+  `readingHistory` and all earlier story IDs are unchanged. Printable full-story
+  layouts and a next-story route are included. Missing clips ask Dad to model the
+  word; Year 1 does not use synthesized speech.
+
+### Recording and data preservation
+
+- The `phonobuddy` database name, versions 2/3, stores, sound IDs, `word:` IDs,
+  family-code setting and cloud paths are unchanged. No data migration or reset.
+- Downloads and JSON restores use an atomic missing-only merge. Bulk cloud uploads
+  use an atomic Firebase transaction and never replace an existing cloud entry,
+  even when a different device has a newer timestamp. This supersedes April's
+  timestamp-only bulk merge policy.
+- Intentionally recording a sound again still replaces that local sound and can
+  update its cloud copy, subject to the timestamp check. Ordinary practice,
+  publishing, downloads, restoring and bulk uploading never do that.
+- Progress backups now include Year 1 attempts and reading settings. Local cloud
+  acknowledgement keys are excluded, along with the family-code setting.
+- Live investigation was read-only. Automated tests use synthetic recordings and
+  mocked cloud services on an isolated local origin, never the real family code.
+- Public Firebase rules remain a known security limitation, as described above.
+  App-side preservation protects normal sync, not malicious writes to public paths.
+
+### Verification and testing
+
+```bash
+npm ci
+npx playwright install chromium webkit
+npm run validate:year1
+npm run lint
+npm test
+npm run build
+```
+
+The 16 automated tests cover two consecutive roads, rapid taps, offline/outbox
+retry, failed local saves, audio failure, manual/automatic progression, the actual
+Settings sync buttons, recording conflict preservation, reading resume and layouts
+at phone/tablet/desktop widths. Chromium covers recording Blob persistence; Windows
+WebKit's Blob storage fails in the test runtime, so its separate tests cover the
+reader/bookmarks and section controls. Real iPhone/iPad audio still needs a device
+check. Cloud writes are mocked; live writes are not used for testing.
+
+Compatible dependency security fixes were applied to the lockfile (`npm audit`
+reported zero vulnerabilities). Deployment now gates on content validation, lint,
+Chromium regression tests and the production build before publishing to Pages.
+
+On the live device: reload the same site without clearing website data. Test
+Settings > Pull progress, then build a road and choose Next batch or Next section.
+Stories opens the selected section's three books. Keep the original family code;
+do not create a new one to troubleshoot a failed sync.

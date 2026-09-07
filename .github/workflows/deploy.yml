@@ -23,6 +23,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npm run validate:year1
+      - run: npm run lint
+      - run: npx playwright install --with-deps chromium
+      - run: npm test -- --project=chromium
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

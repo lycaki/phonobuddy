@@ -67,6 +67,18 @@ export async function saveRecordingBlob(phonemeId, blob, timestamp = Date.now())
   await db.recordings.put({ phonemeId, blob, timestamp });
 }
 
+// Sync and restore may add a missing clip, never replace a device's own clip.
+// A transaction also protects a recording saved while a download is in flight.
+export async function addMissingRecording(phonemeId, blob, timestamp = 0) {
+  if (!blob?.size) return false;
+  return db.transaction('rw', db.recordings, async () => {
+    const existing = await db.recordings.get(phonemeId);
+    if (existing?.blob?.size) return false;
+    await db.recordings.put({ phonemeId, blob, timestamp });
+    return true;
+  });
+}
+
 export async function getRecordingBlob(phonemeId) {
   const row = await db.recordings.get(phonemeId);
   return row ? row.blob : null;

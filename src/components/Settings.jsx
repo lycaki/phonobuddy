@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import FamilyCode from './FamilyCode';
-import { db, getAllRecordingIds, getRecordingBlob, getRecordingRecord, saveRecordingBlob } from '../utils/storage';
+import { db, getAllRecordingIds, getRecordingBlob, getRecordingRecord, addMissingRecording } from '../utils/storage';
 import { PHONEMES } from '../data/phonemes';
 import { MASTERY_LEVELS } from '../data/leitner';
 
-export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud, syncStatus, onReset, progress, sessionCount, onSyncProgress, onPullProgress, progressSyncStatus }) {
+export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud, syncStatus, onReset, progress, sessionCount, onSyncProgress, onPullProgress, progressSyncStatus, progressSyncMessage }) {
   const [cleared, setCleared] = useState(null);
   const [backupStatus, setBackupStatus] = useState(null);
 
@@ -76,8 +76,7 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
           const bytes = new Uint8Array(binary.length);
           for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
           const blob = new Blob([bytes], { type: rec.type || 'audio/webm' });
-          await saveRecordingBlob(id, blob, rec.timestamp || 0);
-          restored++;
+          if (await addMissingRecording(id, blob, rec.timestamp || 0)) restored++;
         }
 
         setBackupStatus(`restored-${restored}`);
@@ -97,6 +96,7 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
     try {
       const allProgress = await db.progress.toArray();
       const sessions = await db.sessions.toArray();
+      const attempts = await db.attempts.toArray();
       const settings = await db.settings.toArray();
 
       const backup = {
@@ -104,7 +104,8 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
         date: new Date().toISOString(),
         progress: allProgress,
         sessions,
-        settings: settings.filter(s => s.key !== 'familyCode'), // don't export family code
+        attempts,
+        settings: settings.filter(s => s.key !== 'familyCode' && !s.key.startsWith('year1Synced:')),
       };
 
       const json = JSON.stringify(backup, null, 2);
@@ -197,14 +198,14 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
             Progress auto-syncs after every session.
           </p>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <button onClick={onSyncProgress} disabled={progressSyncStatus === 'syncing'} style={{
+            <button onClick={() => onSyncProgress()} disabled={progressSyncStatus === 'syncing'} style={{
               background: progressSyncStatus === 'syncing' ? "#2a3a5c" : "#b088f9",
               border:"none",borderRadius:10,padding:"10px 14px",fontSize:14,
               fontFamily:"'Fredoka'",color: progressSyncStatus === 'syncing' ? "#a0aec0" : "#0f1729",cursor:"pointer",
             }}>
               {progressSyncStatus === 'syncing' ? '⏫ Syncing...' : '⬆️ Push progress'}
             </button>
-            <button onClick={onPullProgress} disabled={progressSyncStatus === 'syncing'} style={{
+            <button onClick={() => onPullProgress()} disabled={progressSyncStatus === 'syncing'} style={{
               background: progressSyncStatus === 'syncing' ? "#2a3a5c" : "#4ecdc4",
               border:"none",borderRadius:10,padding:"10px 14px",fontSize:14,
               fontFamily:"'Fredoka'",color: progressSyncStatus === 'syncing' ? "#a0aec0" : "#0f1729",cursor:"pointer",
@@ -212,8 +213,8 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
               {progressSyncStatus === 'syncing' ? '⏬ Syncing...' : '⬇️ Pull progress'}
             </button>
           </div>
-          {progressSyncStatus === 'done' && <p style={{fontFamily:"'Andika'",fontSize:12,color:"#7bc67e",margin:"8px 0 0",textAlign:"center"}}>✅ Progress synced!</p>}
-          {progressSyncStatus === 'error' && <p style={{fontFamily:"'Andika'",fontSize:12,color:"#e88d8d",margin:"8px 0 0",textAlign:"center"}}>❌ Sync failed — check connection</p>}
+          {progressSyncStatus === 'done' && <p role="status" style={{fontFamily:"'Andika'",fontSize:13,color:"#7bc67e",margin:"8px 0 0"}}>{progressSyncMessage || 'Progress synced.'}</p>}
+          {progressSyncStatus === 'error' && <p role="status" style={{fontFamily:"'Andika'",fontSize:13,color:"#e88d8d",margin:"8px 0 0"}}>{progressSyncMessage || 'Progress sync failed. Local practice and recordings are kept. Check the connection and retry.'}</p>}
         </div>
       )}
 

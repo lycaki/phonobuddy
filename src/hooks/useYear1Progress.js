@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getAttempts, getSetting, saveAttempt, saveAttempts, setSetting } from '../utils/storage';
-import { YEAR1_PROFILE } from '../data/year1Profile';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { db, getAttempts, getSetting, saveAttempt, saveAttempts, setSetting } from '../utils/storage';
+import { YEAR1_BLOCKS, YEAR1_PROFILE } from '../data/year1Profile';
 import { isFirebaseConfigured } from '../utils/firebase';
+import { chooseSessionItems } from '../utils/year1Session';
 
 function makeEventId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -12,35 +13,75 @@ export function useYear1Progress(familyCode) {
   const [attempts, setAttempts] = useState([]);
   const [selectedBlock, setSelectedBlockState] = useState(0);
   const [pseudoApproved, setPseudoApprovedState] = useState(false);
+  const [autoProgress, setAutoProgressState] = useState(false);
+  const [batchOffsets, setBatchOffsets] = useState({});
   const [loaded, setLoaded] = useState(false);
-  const attemptsRef = useRef(attempts);
+  const [error, setError] = useState('');
 
-  useEffect(() => { attemptsRef.current = attempts; }, [attempts]);
+  const syncInBackground = useCallback(() => {
+    if (!familyCode || !isFirebaseConfigured()) return;
+    import('../utils/year1Sync').then(({ syncYear1Attempts }) => syncYear1Attempts(familyCode))
+      .catch(error => console.warn('[PhonoBuddy] Attempts saved locally; sync will retry.', error));
+  }, [familyCode]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    syncInBackground();
+    window.addEventListener('online', syncInBackground);
+    const timer = window.setInterval(syncInBackground, 60000);
+    return () => {
+      window.removeEventListener('online', syncInBackground);
+      window.clearInterval(timer);
+    };
+  }, [loaded, syncInBackground]);
 
   useEffect(() => {
     Promise.all([
       getAttempts(YEAR1_PROFILE.id),
       getSetting('year1SelectedBlock', 0),
       getSetting('year1PseudoApproved', false),
-    ]).then(([savedAttempts, block, approved]) => {
+      getSetting('year1AutoProgress', false),
+      getSetting('year1BatchOffsets', {}),
+    ]).then(([savedAttempts, block, approved, auto, offsets]) => {
       setAttempts(savedAttempts);
-      setSelectedBlockState(Number(block) || 0);
+      setSelectedBlockState(YEAR1_BLOCKS.some(entry => entry.id === Number(block)) ? Number(block) : 0);
       setPseudoApprovedState(Boolean(approved));
-      setLoaded(true);
-    });
+      setAutoProgressState(Boolean(auto));
+      setBatchOffsets(offsets || {});
+    }).catch(() => setError('Saved practice could not be opened. Close other PhonoBuddy tabs and reload. Do not clear website data.'))
+      .finally(() => setLoaded(true));
   }, []);
 
   const setSelectedBlock = useCallback((block) => {
     const next = Number(block);
+    if (!YEAR1_BLOCKS.some(entry => entry.id === next)) return;
     setSelectedBlockState(next);
-    setSetting('year1SelectedBlock', next);
+    setSetting('year1SelectedBlock', next).catch(() => setError('The practice point could not be saved on this device.'));
   }, []);
 
   const setPseudoApproved = useCallback((approved) => {
     const next = Boolean(approved);
     setPseudoApprovedState(next);
-    setSetting('year1PseudoApproved', next);
+    setSetting('year1PseudoApproved', next).catch(() => setError('The parent choice could not be saved on this device.'));
   }, []);
+
+  const setAutoProgress = useCallback((enabled) => {
+    setAutoProgressState(Boolean(enabled));
+    setSetting('year1AutoProgress', Boolean(enabled)).catch(() => setError('Auto progression could not be saved on this device.'));
+  }, []);
+
+  const takeNextBatch = useCallback(async () => {
+    const { items, offsets } = await db.transaction('rw', db.settings, async () => {
+      const previous = (await db.settings.get('year1BatchOffsets'))?.value || {};
+      const offset = Number(previous[selectedBlock]) || 0;
+      const items = chooseSessionItems(selectedBlock, offset, pseudoApproved);
+      const offsets = { ...previous, [selectedBlock]: offset + items.length };
+      await db.settings.put({ key: 'year1BatchOffsets', value: offsets });
+      return { items, offsets };
+    });
+    setBatchOffsets(offsets);
+    return items;
+  }, [selectedBlock, pseudoApproved]);
 
   const recordAttempt = useCallback(async ({
     itemId,
@@ -73,19 +114,12 @@ export function useYear1Progress(familyCode) {
     await saveAttempt(event);
     setAttempts(previous => [...previous, event]);
 
-    if (familyCode && isFirebaseConfigured()) {
-      try {
-        const { uploadAttemptEvent } = await import('../utils/cloudSync');
-        await uploadAttemptEvent(familyCode, event);
-      } catch (error) {
-        console.warn('[PhonoBuddy] Year 1 attempt will remain local until the next pull/push.', error);
-      }
-    }
+    syncInBackground();
     return event;
-  }, [familyCode]);
+  }, [syncInBackground]);
 
   const pullFromCloud = useCallback(async (codeOverride) => {
-    const code = codeOverride || familyCode;
+    const code = typeof codeOverride === 'string' ? codeOverride : familyCode;
     if (!code || !isFirebaseConfigured()) return 0;
     const { downloadAttemptEvents } = await import('../utils/cloudSync');
     const remote = await downloadAttemptEvents(code);
@@ -93,6 +127,12 @@ export function useYear1Progress(familyCode) {
     const merged = await getAttempts(YEAR1_PROFILE.id);
     setAttempts(merged);
     return remote.length;
+  }, [familyCode]);
+
+  const syncToCloud = useCallback(async () => {
+    if (!familyCode || !isFirebaseConfigured()) throw new Error('Connect a family code first.');
+    const { syncYear1Attempts } = await import('../utils/year1Sync');
+    await syncYear1Attempts(familyCode);
   }, [familyCode]);
 
   const stats = useMemo(() => {
@@ -111,10 +151,16 @@ export function useYear1Progress(familyCode) {
     selectedBlock,
     setSelectedBlock,
     pseudoApproved,
+    autoProgress,
+    setAutoProgress,
+    batchOffsets,
+    takeNextBatch,
     setPseudoApproved,
     recordAttempt,
     pullFromCloud,
+    syncToCloud,
     stats,
     loaded,
+    error,
   };
 }

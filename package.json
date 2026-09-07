@@ -9,16 +9,19 @@
     "validate:year1": "node scripts/validate-year1.mjs",
     "generate:monetization": "node scripts/generate-monetization-pack.mjs",
     "lint": "eslint .",
+    "test": "playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
     "dexie": "^4.3.0",
     "firebase": "^12.11.0",
+    "lucide-react": "^1.42.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.63.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

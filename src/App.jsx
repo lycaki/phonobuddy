@@ -20,15 +20,20 @@ import Settings from './components/Settings';
 import WordPractice from './components/WordPractice';
 import SessionHistory from './components/SessionHistory';
 import QuickSetup from './components/QuickSetup';
-import Reading from './components/Reading';
+import Year1Reading from './components/year1/Year1Reading';
 import ParentResources from './components/ParentResources';
 import Year1Adventure from './components/year1/Year1Adventure';
+import { withTimeout } from './utils/withTimeout';
+
+const FIRST_SOUND_OPTIONS = PHONEMES.slice(0, 4);
 
 // Context for recordings — so activities can play custom sounds
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [familyCode, setFamilyCode] = useState(null);
   const [showParentDetails, setShowParentDetails] = useState(false);
+  const [manualSyncStatus, setManualSyncStatus] = useState(null);
+  const [progressSyncMessage, setProgressSyncMessage] = useState('');
 
   const { progress, sessionCount, loaded, updatePhonemeProgress, incrementSessionCount, resetAll, syncToCloud, syncFromCloud, syncStatus } = useProgress(familyCode);
   const recordings = useRecordings(familyCode);
@@ -53,9 +58,25 @@ export default function App() {
   }
 
   async function handlePullCloud(code) {
-    const recordingCount = await recordings.pullFromCloud(code);
-    await Promise.all([syncFromCloud(code), year1.pullFromCloud(code)]);
+    const recordingCount = await withTimeout(recordings.pullFromCloud(code), 30000);
+    // Joining succeeds once recordings are available. A separate progress error
+    // must not discard the code or misreport that the recordings were lost.
+    handleProgressSync('pull', code);
     return recordingCount;
+  }
+
+  async function handleProgressSync(direction, code = familyCode) {
+    setManualSyncStatus('syncing');
+    setProgressSyncMessage('');
+    const results = await Promise.allSettled([
+      withTimeout(direction === 'pull' ? syncFromCloud(code) : syncToCloud()),
+      withTimeout(direction === 'pull' ? year1.pullFromCloud(code) : year1.syncToCloud()),
+    ]);
+    const failed = results.map((result, index) => result.status === 'rejected' || result.value === false ? ['Reception', 'Year 1'][index] : null).filter(Boolean);
+    setManualSyncStatus(failed.length ? 'error' : 'done');
+    setProgressSyncMessage(failed.length
+      ? `${failed.join(' and ')} progress could not sync yet. Saved practice and recordings are kept on this device. Check the connection and retry.`
+      : 'Reception and Year 1 progress synced. Recordings were not changed.');
   }
 
   function handleStartSession() {
@@ -75,10 +96,10 @@ export default function App() {
 
   // Determine when session ends (isActive goes false while screen is session)
   useEffect(() => {
-    if (screen === "session" && !session.isActive && session.sessionResults.length > 0) {
+    if (screen === "session" && !session.isActive && session.sessionActivities.length > 0) {
       setScreen("summary");
     }
-  }, [session.isActive, screen, session.sessionResults.length]);
+  }, [session.isActive, screen, session.sessionActivities.length]);
 
   if (!loaded || !year1.loaded) {
     return (
@@ -108,6 +129,7 @@ export default function App() {
 
         {/* Main Content */}
         <div style={{position:"relative",zIndex:1,maxWidth:screen === "year1" ? 980 : 600,margin:"0 auto",padding:screen === "year1" ? "16px 20px 34px" : "16px 20px 100px"}}>
+          {year1.error && <p role="alert">{year1.error}</p>}
 
           {/* HOME SCREEN */}
           {screen === "home" && (() => {
@@ -272,6 +294,7 @@ export default function App() {
               year1={year1}
               onExit={() => setScreen("home")}
               onOpenSettings={() => setScreen("settings")}
+              onReadStories={() => setScreen("reading")}
             />
           )}
 
@@ -321,16 +344,16 @@ export default function App() {
                   <IdentifySound
                     key={`id-${session.activityIndex}`}
                     targetPhoneme={session.sessionActivities[session.activityIndex].phoneme}
-                    allPhonemes={knownPhonemes.length >= 4 ? knownPhonemes : PHONEMES.slice(0, 4)}
+                    allPhonemes={knownPhonemes.length >= 4 ? knownPhonemes : FIRST_SOUND_OPTIONS}
                     isAssessment={session.sessionMode === "assess" || session.sessionActivities[session.activityIndex].isAssessment}
-                    onResult={session.handleActivityResult}
+                    onResult={(correct, confusedId) => session.handleActivityResult(correct, confusedId, session.sessionActivities[session.activityIndex])}
                   />
                 )}
                 {session.sessionActivities[session.activityIndex]?.type === "introduce" && (
                   <IntroduceSound
                     key={`intro-${session.activityIndex}`}
                     phoneme={session.sessionActivities[session.activityIndex].phoneme}
-                    onComplete={() => session.handleIntroComplete(session.sessionActivities[session.activityIndex].phoneme)}
+                    onComplete={() => session.handleIntroComplete(session.sessionActivities[session.activityIndex].phoneme, session.sessionActivities[session.activityIndex])}
                   />
                 )}
                 {session.sessionActivities[session.activityIndex]?.type === "blend" && (
@@ -338,7 +361,7 @@ export default function App() {
                     key={`blend-${session.activityIndex}`}
                     word={session.sessionActivities[session.activityIndex].word}
                     isAssessment={session.sessionMode === "assess" || session.sessionActivities[session.activityIndex].isAssessment}
-                    onResult={(correct) => session.handleActivityResult(correct)}
+                    onResult={(correct) => session.handleActivityResult(correct, null, session.sessionActivities[session.activityIndex])}
                   />
                 )}
               </div>
@@ -394,7 +417,7 @@ export default function App() {
             />
           )}
 
-          {screen === "reading" && <Reading progress={progress} />}
+          {screen === "reading" && <Year1Reading year1={year1} progress={progress} />}
 
           {screen === "resources" && <ParentResources />}
 
@@ -407,9 +430,10 @@ export default function App() {
               onReset={resetAll}
               progress={progress}
               sessionCount={sessionCount}
-              onSyncProgress={syncToCloud}
-              onPullProgress={syncFromCloud}
-              progressSyncStatus={syncStatus}
+              onSyncProgress={() => handleProgressSync('push')}
+              onPullProgress={() => handleProgressSync('pull')}
+              progressSyncStatus={manualSyncStatus || syncStatus}
+              progressSyncMessage={progressSyncMessage}
             />
           )}
         </div>

@@ -479,7 +479,7 @@ summary {
   border-color: #82c6ff;
   border-bottom-color: #0d589c;
   cursor: pointer;
-  animation: road-pulse 1.05s ease-in-out infinite;
+  box-shadow: 0 0 0 3px #fbe28a;
 }
 
 .sound-road-piece.is-joined {

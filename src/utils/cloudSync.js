@@ -46,32 +46,21 @@ function unsanitiseKey(key) {
 }
 
 // Upload a single recording
-export async function uploadRecording(familyCode, recordingId, audioBlob, localUpdated = Date.now()) {
+export async function uploadRecording(familyCode, recordingId, audioBlob, localUpdated = Date.now(), { missingOnly = false } = {}) {
   const db = await getFirebaseDb();
   if (!db) return { uploaded: false, skipped: false };
 
-  const { ref, get, set } = await import('firebase/database');
+  const { ref, runTransaction } = await import('firebase/database');
   const safeKey = sanitiseKey(recordingId);
   const targetRef = ref(db, `recordings/${familyCode}/${safeKey}`);
-  const remoteSnapshot = await get(targetRef);
-
-  if (remoteSnapshot.exists()) {
-    const remote = remoteSnapshot.val();
-    if (remote?.updated && localUpdated && remote.updated > localUpdated) {
-      return { uploaded: false, skipped: true };
-    }
-  }
-
   const base64 = await blobToBase64(audioBlob);
   const updated = localUpdated || Date.now();
 
-  await set(targetRef, {
-    audio: base64,
-    type: audioBlob.type || 'audio/webm',
-    size: audioBlob.size,
-    updated,
-  });
-  return { uploaded: true, skipped: false };
+  const result = await runTransaction(targetRef, remote => {
+    if (remote && (missingOnly || (remote.updated && remote.updated >= localUpdated))) return;
+    return { audio: base64, type: audioBlob.type || 'audio/webm', size: audioBlob.size, updated };
+  }, { applyLocally: false });
+  return { uploaded: result.committed, skipped: !result.committed };
 }
 
 // Upload ALL local recordings in one go
@@ -86,7 +75,7 @@ export async function uploadAllRecordings(familyCode, getAllRecordingIds, getRec
     const record = getRecordingRecord ? await getRecordingRecord(id) : null;
     const blob = record?.blob || await getRecordingBlob(id);
     if (blob && blob.size > 0) {
-      const result = await uploadRecording(familyCode, id, blob, record?.timestamp || 0);
+      const result = await uploadRecording(familyCode, id, blob, record?.timestamp || 0, { missingOnly: true });
       if (result.uploaded) uploaded++;
       if (onProgress) onProgress(uploaded, ids.length);
     }
@@ -250,7 +239,7 @@ export async function uploadSession(familyCode, sessionData) {
 // one tablet from replacing another tablet's history.
 export async function uploadAttemptEvent(familyCode, event) {
   const db = await getFirebaseDb();
-  if (!db || !familyCode || !event?.eventId) return;
+  if (!db || !familyCode || !event?.eventId) throw new Error('Attempt sync unavailable');
 
   const { ref, set } = await import('firebase/database');
   await set(ref(db, `progress/${familyCode}/attempts/${sanitiseKey(event.eventId)}`), event);

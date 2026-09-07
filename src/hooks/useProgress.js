@@ -68,22 +68,24 @@ export function useProgress(familyCode) {
       await uploadProgress(familyCode, progressRef.current, sessionCountRef.current);
       setSyncStatus('done');
       setTimeout(() => setSyncStatus('idle'), 2000);
+      return true;
     } catch (e) {
       console.error('[PhonoBuddy] Progress sync failed:', e);
       setSyncStatus('error');
       setTimeout(() => setSyncStatus('idle'), 3000);
+      return false;
     }
   }, [familyCode]);
 
   // Pull progress from cloud (call on demand or on join)
   const syncFromCloud = useCallback(async (codeOverride) => {
-    const code = codeOverride || familyCode;
+    const code = typeof codeOverride === 'string' ? codeOverride : familyCode;
     if (!code || !isFirebaseConfigured()) return false;
     setSyncStatus('syncing');
     try {
       const { downloadProgress } = await import('../utils/cloudSync');
       const remote = await downloadProgress(code);
-      if (!remote) { setSyncStatus('idle'); return false; }
+      if (!remote) { setSyncStatus('idle'); return null; }
 
       // Merge: take the higher mastery level for each phoneme
       const merged = { ...progressRef.current };

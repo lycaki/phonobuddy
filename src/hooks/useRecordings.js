@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { saveRecordingBlob, getRecordingBlob, getAllRecordingIds, addMissingRecording } from '../utils/storage';
-import { speakPhoneme } from '../utils/speech';
+import { speak, stopSpeaking } from '../utils/speech';
 import { playRecordedAudio } from '../utils/recordedAudio';
 
 export function useRecordings(familyCode) {
@@ -60,8 +60,11 @@ export function useRecordings(familyCode) {
 
   // Play a sound or word: ALWAYS check DB directly, never rely only on in-memory Set
   const playSound = useCallback(async (id, options = {}) => {
+    if (options.signal?.aborted) return false;
+    stopSpeaking();
     // Try DB directly — this avoids stale closure issues with recordingIds
     const blob = await getRecordingBlob(id);
+    if (options.signal?.aborted) return false;
     if (blob && blob.size > 0) {
       // Got a recording from DB — play it
       let url = urlCache.current[id];
@@ -73,22 +76,13 @@ export function useRecordings(familyCode) {
         return await playRecordedAudio(url, options);
       } catch (e) {
         console.warn(`[PhonoBuddy] Audio play failed for "${id}":`, e);
-        // Fall through to TTS
+        return false;
       }
     }
 
-    // These require a reviewed human model. Synthesising the label "schwa" or
-    // guessing voiced th would teach the wrong sound.
-    if (id === 'schwa' || id === 'th_voiced' || options.allowTts === false) return false;
-
-    // No recording found — use TTS fallback
-    if (id.startsWith('word:')) {
-      const { speak } = await import('../utils/speech');
-      speak(id.slice(5), 0.7);
-    } else {
-      speakPhoneme(id);
-    }
-    return false;
+    // Word readers cannot safely model isolated phonemes or pseudo-words.
+    if (!id.startsWith('word:') || options.allowTts === false) return false;
+    return speak(id.slice(5), undefined, { signal: options.signal });
   }, []); // No dependencies — reads DB directly every time
 
   const pullFromCloud = useCallback(async (code) => {

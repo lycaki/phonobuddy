@@ -18,7 +18,11 @@ remain for reference; they are not the Year 1 progression rules.
 - Pseudo-words remain disabled until a parent reviews and approves the visible bank.
 - Split digraphs use true one-letter transformations such as `hop -> hope`.
 - Dad remains the correctness judge. No ASR or lexical guessing is used.
-- Year 1 never substitutes browser TTS for a missing phoneme or word recording.
+- Recorded words always play first. Missing real words can use a chosen English
+  reading voice; isolated phonemes and Year 1 pseudo-words never use browser TTS.
+- Settings > Reading voice provides a preview, speed and on/off control. Automatic
+  selection prefers recognised female British-English voices, with higher-quality
+  variants where the browser exposes them. This choice is saved per browser.
 - A returning device downloads missing cloud clips when its local sound bank is
   incomplete. Existing local recordings are never replaced by a download.
 - Readiness checks the actual sounds needed for the next road, not a global
@@ -27,7 +31,9 @@ remain for reference; they are not the Year 1 progression rules.
   verdict and retries. Latency is contextual, not mastery by itself.
 - Parent controls can select any teaching block, skip a word, or start another
   batch at any time. Optional automatic progression is off by default.
-- 36 original Year 1 stories cover all 12 sections; the 10 earlier stories remain.
+- 72 original Year 1 stories cover all 12 sections (six each); the 10 earlier
+  stories remain. Every practice-bank word appears in at least two stories in its
+  matching section. Extra vocabulary is marked for shared reading with a parent.
 
 The profile is `els-copnor-provisional-2026`. It records its programme, version,
 source links, review date and provisional status in
@@ -291,7 +297,7 @@ In the app: **📊 Progress** → scroll to session history at the bottom
 
 ## 🐛 Known issues / quirks
 
-- **First run on a device**: recordings are TTS robot voice until you join a family code or restore a backup
+- **First run on a device**: join the existing family code or restore a backup to get the family's recordings. Missing real words can use the selected reading voice; missing isolated sounds need a parent-spoken or recorded model.
 - **Auto-play on iOS Safari**: Sometimes blocks first auto-play until user taps something. The 🔊 button is always there as a fallback
 - **Reading history is local-only** — doesn't sync across devices yet (could be added)
 - **Linter occasionally CRLF-warns** on Windows — harmless
@@ -487,3 +493,81 @@ On the live device: reload the same site without clearing website data. Test
 Settings > Pull progress, then build a road and choose Next batch or Next section.
 Stories opens the selected section's three books. Keep the original family code;
 do not create a new one to troubleshoot a failed sync.
+
+## 8 September 2026: More stories and selectable reading voices
+
+### Expanded reading library
+
+- Added 36 more original Year 1 stories in `src/data/year1MoreStories.js`, bringing
+  the Year 1 shelf to 72 stories: six in every section, plus the unchanged ten
+  earlier stories. This supersedes the three-per-section count in the 7 September
+  release notes above.
+- Each of the 72 real practice words now appears in at least two stories in its
+  own section. The content validator enforces this, six stories per section,
+  permanent unique IDs, valid focus words, and no pseudo-words in the stories.
+- Stories have six short, one-sentence pages, with eight-page cumulative stories
+  in the final section. Each has a discussion question and a grown-up answer.
+  New stories cover home, school, making things, nature and simple problem solving.
+- The original story IDs and order within their sections are unchanged. Existing
+  reading places, reread counts and the earlier collection remain available. Next
+  story cycles through all six books in the selected section.
+- These are shared-reading practice stories, not graded school decodable books.
+  Unfamiliar vocabulary remains highlighted/listed for adult help. Follow the
+  teacher's current teaching point and school reading books for independent reading.
+
+### Fallback reading voice
+
+- Settings > Reading voice now has an English voice picker, Preview/Stop, a reading
+  speed slider (0.70x to 1.15x, default 0.90x), and an on/off checkbox. Preferences
+  use the new `readingVoicePreferences` entry in the existing local settings store.
+  They persist across reloads but are not cloud-synced because installed voices
+  differ between devices.
+- Automatic selection prefers recognised female British-English voices and then
+  their Enhanced/Premium/Natural/Neural variants when listed. Web Speech has no
+  gender or quality metadata: voice-name matching is a preference, not a quality
+  guarantee. Parents can preview and explicitly choose any available English voice.
+- If a selected voice disappears, a recognised female English voice is preferred
+  and Settings reports the substitution. If none is recognised, there is no silent
+  arbitrary-voice fallback; select an English voice manually or read together.
+- Existing recordings always take priority for tapped words. Only missing real-word
+  clips use the selected reading voice. A blocked/broken existing clip is not
+  replaced or rewritten. Earlier-story sentence narration uses the same saved
+  voice/speed; Year 1 story word buttons now permit this missing-word fallback.
+- Isolated phonics sounds are never synthesised, including the earlier activities.
+  The old artificial phoneme-to-text pronunciation strings have been removed.
+  Year 1 sound-road readiness and its parent-reviewed pseudo-word restrictions are
+  unchanged. Missing sounds still need a recording or parent-spoken model.
+- Voice discovery waits briefly for asynchronously loaded voices. Speech errors,
+  cancellation and timeouts settle cleanly; changing pages, leaving a reader,
+  starting another word or stopping a preview cancels the previous utterance.
+- iPhone/iPad quality depends on the voices Safari exposes. Downloading an enhanced
+  accessibility voice may help, but it is selectable here only if Safari lists it.
+  Reopen the app after installing voices. See the
+  [Apple voice download guide](https://support.apple.com/en-gb/111798) and
+  [Web Speech voice availability](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis/getVoices).
+
+### Preservation and verification
+
+- No recording, progress or bookmark migration, deletion or reset. The database
+  name/schema, sound IDs, family-code setting and cloud paths are unchanged.
+  Missing-only recording download, restore and bulk-upload protection remains.
+  No generated speech is stored over a recording, uploaded, or sent to a new
+  third-party speech service by this update. A browser may itself provide remote
+  voices, according to the device/provider's own implementation.
+- Automated coverage includes voice ranking, explicit selection, delayed voices,
+  saved speed/opt-out, failed preference saves, preview cancellation, speech
+  errors/timeouts, page navigation and recorded-word priority with byte-for-byte
+  preservation. Cloud traffic is blocked or mocked, never tested on family data.
+- Run `npm run validate:year1`, `npm run lint`, `npm test` and `npm run build`.
+  The suite has 32 cases across Chromium and WebKit; one WebKit Blob-storage case
+  is intentionally skipped because Windows WebKit cannot store recording Blobs in
+  this test runtime. Voice tests use a mocked platform voice engine and do not
+  establish the sound quality or voice availability on the actual iPhone/iPad.
+- Phone, tablet and desktop layouts are checked. Real-device listening is still
+  needed: reload the same live site without clearing website data, open Settings >
+  Reading voice, preview the selected female voice, then try an unrecorded story
+  word and one with Dad's recording. Both existing recordings and progress should
+  remain on the device. Do not create a new family code to refresh the update.
+- Local verification passed: 31 browser tests, one documented WebKit skip, content
+  validation, ESLint and the production build. The earlier all-skip test now waits
+  for each activity counter instead of racing the final transition to the summary.

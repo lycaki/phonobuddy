@@ -29,9 +29,9 @@ for (const story of YEAR1_STORIES) {
 }
 for (const block of YEAR1_BLOCKS) {
   const stories = YEAR1_STORIES.filter(story => story.block === block.id);
-  if (stories.length !== 3) errors.push(`Expected three stories for block ${block.id}`);
+  if (stories.length < 6) errors.push(`Expected at least six stories for block ${block.id}`);
   for (const word of YEAR1_WORDS.filter(word => word.block === block.id)) {
-    if (!stories.some(story => storyWords(story).includes(word.word))) errors.push(`Missing story word: ${word.word}`);
+    if (stories.filter(story => storyWords(story).includes(word.word)).length < 2) errors.push(`Need two stories for word: ${word.word}`);
   }
 }
 

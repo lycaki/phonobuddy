@@ -291,7 +291,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
     if (!item.pseudo) {
       audioController.current = new AbortController();
       recordings.playSound(`word:${item.word}`, {
-        allowTts: false, waitForEnd: true, signal: audioController.current.signal,
+        waitForEnd: true, signal: audioController.current.signal,
       }).catch(() => {});
     }
 

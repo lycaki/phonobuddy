@@ -4,6 +4,7 @@ import FamilyCode from './FamilyCode';
 import { db, getAllRecordingIds, getRecordingBlob, getRecordingRecord, addMissingRecording } from '../utils/storage';
 import { PHONEMES } from '../data/phonemes';
 import { MASTERY_LEVELS } from '../data/leitner';
+import ReadingVoiceSettings from './ReadingVoiceSettings';
 
 export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud, syncStatus, onReset, progress, sessionCount, onSyncProgress, onPullProgress, progressSyncStatus, progressSyncMessage }) {
   const [cleared, setCleared] = useState(null);
@@ -165,6 +166,8 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
           <p style={{fontFamily:"'Andika'",fontSize:16,color:"#a0aec0",margin:0}}>Manage your PhonoBuddy</p>
         </div>
       </div>
+
+      <ReadingVoiceSettings />
 
       {/* Data summary */}
       <div style={{background:"#1a2744",borderRadius:16,padding:16,marginBottom:16}}>

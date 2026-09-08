@@ -1,4 +1,5 @@
 import { YEAR1_WORDS } from './year1Profile.js';
+import { YEAR1_MORE_STORIES } from './year1MoreStories.js';
 
 // Original supplementary stories, not school reading books. Support words are
 // derived conservatively from an explicit review bank, never a readiness score.
@@ -167,6 +168,7 @@ export const YEAR1_STORIES = [
     'Ben gave him a grin and rang the bell.', 'Sam took a breath and said his first line.', 'The class listened, then clapped at the end.',
     'Sam felt joy.', 'He put the cape away, ready for another play.',
   ], 'What helped Sam begin?', 'Ben gave him a grin and rang the bell.'),
+  ...YEAR1_MORE_STORIES,
 ];
 
 export function storyWords(story) {

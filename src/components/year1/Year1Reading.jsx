@@ -55,7 +55,7 @@ export default function Year1Reading({ year1, progress }) {
           </button>;
         })}
       </div>
-      <details className="reading-parent"><summary>Parent notes</summary><p>Original practice stories using words from this section. Read unfamiliar words together. A teaching section is not a reading assessment; use the school book level and teacher's advice.</p><p>Reading places and reread counts are saved on this browser, not shared across devices. All 36 stories remain available; no calendar-based unlocking.</p></details>
+      <details className="reading-parent"><summary>Parent notes</summary><p>Original practice stories using words from this section. Read unfamiliar words together. A teaching section is not a reading assessment; use the school book level and teacher's advice.</p><p>Reading places and reread counts are saved on this browser, not shared across devices. All {YEAR1_STORIES.length} stories remain available; no calendar-based unlocking.</p></details>
       <button className="reading-return" onClick={() => setLegacy(true)}><BookOpen size={20} /> Earlier story collection</button>
     </div>
   );
@@ -110,7 +110,7 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
     audio.current = controller;
     setNotice('');
     try {
-      const played = await recordings.playSound(`word:${word}`, { allowTts: false, waitForEnd: true, signal: controller.signal });
+      const played = await recordings.playSound(`word:${word}`, { waitForEnd: true, signal: controller.signal });
       if (!played && !controller.signal.aborted) setNotice(`Dad's turn: ${word}`);
     } catch {
       if (!controller.signal.aborted) setNotice(`Dad's turn: ${word}`);
@@ -127,7 +127,7 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
           {story.sentences[page].split(/(\s+)/).map((token, index) => {
             const word = token.toLowerCase().replace(/[^a-z']/g, '');
             const className = help ? focus.has(word) ? 'focus-word' : supportSet.has(word) ? 'support-word' : '' : '';
-            return !word || !help ? <span key={index}>{token}</span> : <button key={index} className={className} onClick={() => hear(word)} aria-label={`Hear ${word}`} title={recordings.hasRecording(`word:${word}`) ? `Hear ${word}` : `Read ${word} with Dad`}>{token}</button>;
+            return !word || !help ? <span key={index}>{token}</span> : <button key={index} className={className} onClick={() => hear(word)} aria-label={`Hear ${word}`} title={`Hear ${word}`}>{token}</button>;
           })}
         </div>
         <p className="reader-notice" role="status">{notice}</p>

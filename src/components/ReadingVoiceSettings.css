@@ -1,0 +1,14 @@
+.reading-voice-settings { padding: 20px 0; margin: 16px 0 24px; border-top: 1px solid #496377; border-bottom: 1px solid #496377; color: #edf3f5; }
+.reading-voice-settings h3 { font-size: 22px; color: #4ecdc4; margin: 0 0 10px; }
+.reading-voice-settings p, .reading-voice-settings details { font-size: 14px; line-height: 1.6; }
+.reading-voice-settings label { display: block; margin: 12px 0 8px; font-size: 15px; }
+.reading-voice-settings .voice-toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.voice-toggle input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: #4ecdc4; }
+.reading-voice-settings select { width: 100%; min-width: 0; min-height: 48px; padding: 8px; border: 1px solid #92b0bc; border-radius: 4px; background: #f7fbfa; color: #213830; font: 14px 'Andika', sans-serif; }
+.reading-voice-settings .voice-current { color: #bdd6da; overflow-wrap: anywhere; }
+.reading-voice-settings input[type=range] { display: block; width: 100%; min-height: 44px; accent-color: #4ecdc4; }
+.reading-voice-settings button { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 18px; border: 0; border-radius: 8px; background: #4ecdc4; color: #173b3b; font: inherit; cursor: pointer; }
+.reading-voice-settings button:disabled { opacity: .5; cursor: default; }
+.reading-voice-settings details { margin-top: 16px; }
+.reading-voice-settings summary { cursor: pointer; min-height: 40px; }
+.reading-voice-settings a { color: #83d9e6; }

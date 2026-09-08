@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import { STORIES, DIFFICULTIES, getStoriesByDifficulty, getStoryWordCount } from '../data/stories';
 import { PHONEMES, WORDS, TRICKY_WORDS } from '../data/phonemes';
 import { RecordingsContext } from '../context/RecordingsContext';
@@ -137,6 +137,9 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
   const [sentenceIdx, setSentenceIdx] = useState(0);
   const [readMode, setReadMode] = useState("help");
   const [showHelp, setShowHelp] = useState(true);
+  const [voiceNotice, setVoiceNotice] = useState('');
+  const audio = useRef(null);
+  useEffect(() => () => audio.current?.abort(), []);
   const { playSound } = useContext(RecordingsContext);
   const sentence = story.sentences[sentenceIdx];
   const isLast = sentenceIdx === story.sentences.length - 1;
@@ -145,19 +148,35 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
   // Split sentence into tappable words (preserve punctuation)
   const words = sentence.split(/(\s+)/).filter(s => s.trim());
 
-  function tapWord(rawWord) {
+  async function tapWord(rawWord) {
     if (readMode === "myself" && !showHelp) return;
     // Strip punctuation for lookup
     const clean = rawWord.toLowerCase().replace(/[^a-z']/g, '');
     if (!clean) return;
-    playSound(`word:${clean}`);
+    audio.current?.abort();
+    const controller = new AbortController();
+    audio.current = controller;
+    setVoiceNotice('');
+    try {
+      const played = await playSound(`word:${clean}`, {waitForEnd:true, signal:controller.signal});
+      if (!played && !controller.signal.aborted) setVoiceNotice(`Read together: ${clean}`);
+    } catch {
+      if (!controller.signal.aborted) setVoiceNotice(`Read together: ${clean}`);
+    }
   }
 
-  function readWholeSentence() {
-    speak(sentence, 0.85);
+  async function readWholeSentence() {
+    audio.current?.abort();
+    const controller = new AbortController();
+    audio.current = controller;
+    setVoiceNotice('');
+    const played = await speak(sentence, undefined, {signal:controller.signal});
+    if (!played && !controller.signal.aborted) setVoiceNotice('Read this sentence together.');
   }
 
   function next() {
+    audio.current?.abort();
+    setVoiceNotice('');
     if (isLast) {
       onComplete();
     } else {
@@ -167,6 +186,8 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
   }
 
   function back() {
+    audio.current?.abort();
+    setVoiceNotice('');
     if (sentenceIdx > 0) {
       setSentenceIdx(i => i - 1);
       setShowHelp(readMode === "help");
@@ -204,7 +225,7 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
           { id:"help", label:"Read with help" },
           { id:"myself", label:"Read myself" },
         ].map(mode => (
-          <button key={mode.id} onClick={() => { setReadMode(mode.id); setShowHelp(mode.id === "help"); }} style={{
+          <button key={mode.id} onClick={() => { audio.current?.abort(); setVoiceNotice(''); setReadMode(mode.id); setShowHelp(mode.id === "help"); }} style={{
             background: readMode === mode.id ? "#4ecdc4" : "#1a2744",
             border:`2px solid ${readMode === mode.id ? "#4ecdc4" : "#2a3a5c"}`,
             borderRadius:12,
@@ -259,7 +280,7 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
       <div style={{textAlign:"center",margin:"16px 0"}}>
         {(readMode === "help" || showHelp) ? (
           <>
-            <button onClick={readWholeSentence} style={{background:"#1a2744",border:"2px solid #4ecdc4",borderRadius:50,width:60,height:60,fontSize:24,cursor:"pointer"}}>
+            <button onClick={readWholeSentence} title="Read sentence" aria-label="Read sentence" style={{background:"#1a2744",border:"2px solid #4ecdc4",borderRadius:50,width:60,height:60,fontSize:24,cursor:"pointer"}}>
               🔊
             </button>
             <p style={{fontFamily:"'Andika'",fontSize:11,color:"#a0aec0",marginTop:6}}>Tap to hear the whole sentence</p>
@@ -272,6 +293,7 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
       </div>
 
       {/* Navigation */}
+      {voiceNotice && <p role="status">{voiceNotice}</p>}
       <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:24}}>
         <button onClick={back} disabled={sentenceIdx === 0} style={{
           background: sentenceIdx === 0 ? "#1a2744" : "#2a3a5c",

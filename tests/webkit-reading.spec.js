@@ -4,6 +4,10 @@ test('WebKit iPhone-sized reader resumes and retains its read count', async ({pa
   await page.setViewportSize({width:390,height:844});
   await page.route(/firebaseio|firebasedatabase/, route=>route.abort());
   await page.goto('./');
+  await page.evaluate(async () => {
+    const {db} = await import('/phonobuddy/src/utils/storage.js');
+    await db.settings.put({key:'readingVoicePreferences',value:{enabled:false}});
+  });
   await page.getByRole('button',{name:/Stories/}).first().click();
   await page.getByRole('button',{name:/A Frog in the Pond/}).click();
   await page.getByRole('button',{name:'Next page',exact:true}).click();

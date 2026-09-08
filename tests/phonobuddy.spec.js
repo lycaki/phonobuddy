@@ -60,6 +60,7 @@ async function setup(page, { family = false, block = 0, mode = 'pending' } = {})
     await db.recordings.bulkPut([...ids].map(phonemeId => ({phonemeId, blob:new Blob(['local-original']), timestamp:1})));
     await db.settings.put({key:'year1SelectedBlock', value:block});
     await db.settings.put({key:'readingHistory', value:{oldStory:{timesRead:3}}});
+    await db.settings.put({key:'readingVoicePreferences', value:{enabled:false}});
     await db.progress.put({id:'s', introduced:true, mastery:3, box:3, correct:7});
     if (family) await db.settings.put({key:'familyCode',value:'TEST99'});
   }, { family, block });
@@ -198,12 +199,12 @@ test('stories resume, complete, reread and retain old history and recordings', a
   expect(data.progress.correct).toBe(7);
 });
 
-test('all 36 stories and long words fit mobile and tablet', async ({ page }, testInfo) => {
+test('all 72 stories and long words fit mobile and tablet', async ({ page }, testInfo) => {
   await setup(page);
   await page.getByRole('button',{name:/Stories/}).first().click();
   for (let block=0; block<12; block++) {
     await page.getByLabel('Reading section').selectOption(String(block));
-    await expect(page.locator('.story-entry')).toHaveCount(3);
+    await expect(page.locator('.story-entry')).toHaveCount(6);
   }
   for (const width of [375, 820, 1366]) {
     await page.setViewportSize({width,height:1024});
@@ -312,7 +313,11 @@ test('Reception practice can skip the whole batch and still reach its summary', 
   await setup(page);
   await page.getByRole('button',{name:'Parent view',exact:true}).click();
   await page.getByRole('button',{name:'Reception sound practice',exact:true}).click();
-  for (let i=0; i<30 && await page.getByRole('button',{name:'Skip →',exact:true}).isVisible(); i++) {
+  const counter = page.getByText(/^\d+\/\d+$/).first();
+  await expect(counter).toBeVisible();
+  const total = Number((await counter.textContent()).split('/')[1]);
+  for (let i=1; i<=total; i++) {
+    await expect(counter).toHaveText(`${i}/${total}`);
     await page.getByRole('button',{name:'Skip →',exact:true}).click();
   }
   await expect(page.getByRole('button',{name:'Skip →',exact:true})).toHaveCount(0);

@@ -63,14 +63,24 @@ export function useRecordings(familyCode) {
     if (options.signal?.aborted) return false;
     stopSpeaking();
     // Try DB directly — this avoids stale closure issues with recordingIds
-    const blob = await getRecordingBlob(id);
+    let recordingId = id;
+    let blob = await getRecordingBlob(recordingId);
+    // Reuse older title-case/lower-case word clips without renaming or writing them.
+    if (!blob?.size && id.startsWith('word:')) {
+      const lower = id.toLowerCase();
+      const capitalised = {'word:i':'word:I', 'word:mr':'word:Mr', 'word:mrs':'word:Mrs', 'word:christmas':'word:Christmas', 'word:february':'word:February'}[lower];
+      for (const alias of [...new Set([lower, capitalised].filter(value => value && value !== id))]) {
+        const existing = await getRecordingBlob(alias);
+        if (existing?.size) { blob = existing; recordingId = alias; break; }
+      }
+    }
     if (options.signal?.aborted) return false;
     if (blob && blob.size > 0) {
       // Got a recording from DB — play it
-      let url = urlCache.current[id];
+      let url = urlCache.current[recordingId];
       if (!url) {
         url = URL.createObjectURL(blob);
-        urlCache.current[id] = url;
+        urlCache.current[recordingId] = url;
       }
       try {
         return await playRecordedAudio(url, options);
@@ -82,7 +92,7 @@ export function useRecordings(familyCode) {
 
     // Word readers cannot safely model isolated phonemes or pseudo-words.
     if (!id.startsWith('word:') || options.allowTts === false) return false;
-    return speak(id.slice(5), undefined, { signal: options.signal });
+    return speak(options.speechText || id.slice(5), undefined, { signal: options.signal });
   }, []); // No dependencies — reads DB directly every time
 
   const pullFromCloud = useCallback(async (code) => {

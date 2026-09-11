@@ -34,6 +34,12 @@ remain for reference; they are not the Year 1 progression rules.
 - 72 original Year 1 stories cover all 12 sections (six each); the 10 earlier
   stories remain. Every practice-bank word appears in at least two stories in its
   matching section. Extra vocabulary is marked for shared reading with a parent.
+- Words > School lists adds the supplied reading-record checklists: 73 Year R/1,
+  64 Year 2 and 106 Years 3/4 entries, with separate saved reading/spelling ticks.
+  Year R/1 opens first; later-year lists are optional and do not change Dino Road.
+- Stories > Reading record logs home reading and provides the school's before,
+  during and after reading prompts. New school checks/logs are local to each
+  browser and included in progress backups, not automatically cloud-synced.
 
 The profile is `els-copnor-provisional-2026`. It records its programme, version,
 source links, review date and provisional status in
@@ -571,3 +577,92 @@ do not create a new one to troubleshoot a failed sync.
 - Local verification passed: 31 browser tests, one documented WebKit skip, content
   validation, ESLint and the production build. The earlier all-skip test now waits
   for each activity counter instead of racing the final transition to the summary.
+
+## 11 September 2026: School sheets, reading and spelling
+
+### Word lists from the supplied photos
+
+- `src/data/schoolWords.js` transcribes the three photographed school lists in
+  column order: Year R and 1 (73 words), Year 2 (64), and Years 3 and 4 (106).
+  There are 243 list entries and 227 distinct words because some lists overlap.
+  Spellings and capitals from the sheets are retained, including `buses`, `asked`,
+  `Mr`, `Mrs`, `actual`, `February`, `forwards`, `although`, `woman` and `women`.
+  These are the supplied sheets, not a claim to reproduce a different statutory
+  list or a school-confirmed ELS teaching sequence. The ELS profile stays provisional.
+- Words now opens School lists, with Sound blending retaining the earlier word
+  activities. A list selector, word search and still-practising filter give direct
+  access to every word. Year R/1 opens first on each visit; later lists are opt-in
+  practice, not automatically assigned to a Year 1 child.
+- Each word has independent Read and Spell checkboxes, modelled on the sheets.
+  Repeated words share these checks between lists. Parents can add or clear a tick;
+  the app does not infer mastery from time, tapping or an automatic spelling match.
+- Batches contain up to five different words. Read mode shows the word and optional
+  audio. Spell mode uses look, cover, write and check; the child can type or write
+  on paper, and a grown-up decides whether to mark it as spelled. No phoneme
+  breakdown is invented for these harder or later-year words.
+- Previous, next, skip, repeat batch and next batch remain manual escape routes.
+  Optional automatic next-word movement follows a saved grown-up verdict only.
+  Batch positions and the automatic-next preference survive reloads. Completing a
+  batch pauses for the parent; there is no automatic promotion into an older year.
+  Failed saves show an error and permit a retry instead of silently advancing.
+
+### School reading-record style and routine
+
+- Added clean white pages, restrained blue rules, Read/Spell columns, large word
+  displays and printable checklists. Existing readable Andika print is retained
+  instead of copying joined handwriting into early phonics exercises. The story
+  reader gets the same page treatment without replacing its content or bookmarks.
+- Stories > Reading record records the date, book/text title, minutes read, how
+  the reading went and optional comments/words to revisit. Entries can be edited
+  and printed. A stable entry ID prevents rapid double-submission from duplicating
+  a read; failed saves keep the draft for retry.
+- The weekly summary follows the supplied five-times-a-week, ten-minutes-a-day
+  routine. It uses local calendar dates and adds short reads on the same day before
+  counting a ten-minute reading day. The week starts Monday. Minutes are entered
+  by the parent, never guessed from an open browser tab.
+- Parent notes reflect the supplied guidance on enjoying books, varied texts,
+  favourites, library visits and discussion. School rewards and the paper record
+  remain the school's responsibility; the app does not award house points or send
+  entries to school.
+- Before/during/after prompts are integrated into Year 1 stories: title/topic,
+  characters and setting, retelling, prediction, expression, preferences and
+  comparisons. Predictions are for comprehension, not guessing unfamiliar words.
+  Finishing a story offers an explicit Add to reading record form; it does not
+  automatically manufacture a ten-minute reading session. All 72 Year 1 and ten
+  earlier stories remain intact.
+
+### Recordings and stored data
+
+- The Recording Studio includes the school words and missing Year 1 practice
+  words, with a School lists filter and word search. Existing sound IDs, word IDs
+  and recording metadata are retained. Adding vocabulary never creates, deletes
+  or replaces a recording automatically.
+- Word playback checks existing recordings first, including older case variants
+  such as `word:i` versus `word:I`, without renaming or copying the clips. Only a
+  missing real word uses the selected fallback voice. `Mr`/`Mrs` can use spoken
+  titles in school practice; no TTS is introduced for isolated phonemes.
+- No database name/schema change or migration. New data uses separate settings:
+  `schoolWord:<lower-case-word>`, `schoolBatchOffsets`, `schoolAutoNext` and
+  `homeReading:<entry-id>`. Word checks are updated transactionally by skill.
+  Existing Reception/Year 1 attempts, bookmarks, family code and voice preference
+  are not reset or repurposed.
+- These new ticks, batch choices and reading entries are saved on this browser,
+  included in Settings > Backup Progress, and available in the printed records.
+  They are not yet part of family-code cloud sync. Existing missing-only recording
+  download, restore and bulk-upload protection remains unchanged.
+- The six source photographs and their personal surroundings were not copied
+  into the public repository. Tests use isolated browsers with mocked or blocked
+  cloud traffic, never the family's cloud data or recordings on other devices.
+
+### Verification
+
+- Content validation checks the three transcription counts and 227 unique words,
+  alongside the unchanged Year 1 mappings and 72-story coverage checks.
+- `npm run validate:year1`, `npm run lint`, `npm run build` and `npm test` passed.
+  The suite now has 60 cases: 58 passed and two known Windows WebKit recording-Blob
+  cases are skipped. Chromium covers actual Blob preservation; mocked browser
+  audio tests do not replace a real iPad/iPhone microphone and listening check.
+- Added coverage for independent/shared word ticks, failed saves, spelling cover,
+  repeated and single-word batches, saved batch/manual-next choices, record edits,
+  duplicate prevention, weekly totals, backup contents, original-data preservation,
+  school recording vocabulary and phone/tablet/desktop/print layouts.

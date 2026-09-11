@@ -1,17 +1,19 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, Check, Printer, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, NotebookPen, Printer, RotateCcw } from 'lucide-react';
 import { YEAR1_BLOCKS } from '../../data/year1Profile';
 import { YEAR1_STORIES, getStorySupportWords, storyWords } from '../../data/year1Stories';
 import { db } from '../../utils/storage';
 import { RecordingsContext } from '../../context/RecordingsContext';
 import Reading from '../Reading';
 import PhonoBuddyOwl from '../PhonoBuddyOwl';
+import HomeReadingRecord, { ReadingConversation, ReadingEntryForm } from '../school/HomeReadingRecord';
 import './Year1Reading.css';
 
 const bookmarkKey = id => `year1Story:${id}`;
 
 export default function Year1Reading({ year1, progress }) {
   const [legacy, setLegacy] = useState(false);
+  const [record, setRecord] = useState(false);
   const [selected, setSelected] = useState(null);
   const [history, setHistory] = useState({});
   const [loaded, setLoaded] = useState(false);
@@ -24,6 +26,7 @@ export default function Year1Reading({ year1, progress }) {
       .finally(() => setLoaded(true));
   }, []);
 
+  if (record) return <HomeReadingRecord onBack={() => setRecord(false)} />;
   if (legacy) return <><button className="reading-return" onClick={() => setLegacy(false)}><ArrowLeft size={20} /> Year 1 stories</button><Reading progress={progress} /></>;
   if (selected) return <StoryReader key={selected.id} story={selected} initial={history[selected.id]}
     onClose={() => setSelected(null)} onSaved={value => setHistory(previous => ({ ...previous, [selected.id]: value }))}
@@ -36,6 +39,7 @@ export default function Year1Reading({ year1, progress }) {
   return (
     <div className="year1-reading">
       <header className="reading-heading"><div><p>YEAR 1</p><h1>Story shelf</h1></div><PhonoBuddyOwl size={72} mood="happy" /></header>
+      <button className="reading-return" onClick={() => setRecord(true)}><NotebookPen size={20} />Reading record</button>
       <label className="section-choice" htmlFor="story-section">Reading section</label>
       <select id="story-section" value={block.id} onChange={event => year1.setSelectedBlock(event.target.value)}>
         {YEAR1_BLOCKS.map(entry => <option key={entry.id} value={entry.id}>{entry.term}: {entry.label}</option>)}
@@ -68,6 +72,8 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
   const [finished, setFinished] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [logging, setLogging] = useState(false);
+  const [logged, setLogged] = useState(false);
   const saving = useRef(false);
   const audio = useRef(null);
   const support = getStorySupportWords(story);
@@ -96,6 +102,8 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
       onSaved(value);
       setPage(next);
       setFinished(complete);
+      setLogging(false);
+      setLogged(false);
     } catch {
       setNotice('Your reading place could not be saved. Try again. Do not clear website data.');
     } finally {
@@ -121,8 +129,9 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
     <header className="reader-bar"><button onClick={onClose} title="Back to stories" aria-label="Back to stories"><ArrowLeft /></button><span>{story.title}</span><button onClick={() => window.print()} title="Print story" aria-label="Print story"><Printer /></button></header>
     <div className="reader-screen">
       <div className="reader-options"><span>Page {page + 1} of {story.sentences.length}</span><label><input type="checkbox" checked={help} onChange={event => { setHelp(event.target.checked); setNotice(''); audio.current?.abort(); }} /> Dad's help</label></div>
-      {finished ? <div className="story-finish"><Check size={44} /><h1 ref={heading} tabIndex={-1}>Story finished</h1><p>{story.title}</p><button onClick={() => move(0)} disabled={busy}><RotateCcw size={20} /> Read again</button><button onClick={onNext}><BookOpen size={20} /> Next story</button></div> : <>
+      {finished ? <><div className="story-finish"><Check size={44} /><h1 ref={heading} tabIndex={-1}>Story finished</h1><p>{story.title}</p><button onClick={() => move(0)} disabled={busy}><RotateCcw size={20} /> Read again</button><button onClick={onNext}><BookOpen size={20} /> Next story</button>{!logged && !logging && <button onClick={() => setLogging(true)}><NotebookPen size={20} />Add to reading record</button>}{logged && <p>Added to your reading record.</p>}</div>{logging && <ReadingEntryForm title={story.title} onCancel={() => setLogging(false)} onSaved={() => {setLogging(false); setLogged(true);}} />}<ReadingConversation stage="after" /></> : <>
         <h1 className="reader-title" ref={heading} tabIndex={-1}>{story.title}</h1>
+        {page === 0 && <ReadingConversation stage="before" />}
         <div className="story-sentence" aria-label={`Story page ${page + 1}`}>
           {story.sentences[page].split(/(\s+)/).map((token, index) => {
             const word = token.toLowerCase().replace(/[^a-z']/g, '');
@@ -133,6 +142,7 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
         <p className="reader-notice" role="status">{notice}</p>
         {lastPage && <section className="story-question"><h2>Let's talk</h2><p>{story.question}</p><details><summary>For the grown-up</summary><p>{story.answer}</p></details></section>}
         <nav className="reader-navigation" aria-label="Story pages"><button disabled={page === 0 || busy} onClick={() => move(page - 1)} title="Previous page" aria-label="Previous page"><ArrowLeft /></button><progress max={story.sentences.length} value={page + 1} aria-label="Reading progress" /><button disabled={busy} onClick={() => move(lastPage ? 0 : page + 1, lastPage)} aria-label={lastPage ? 'Finish story' : 'Next page'} title={lastPage ? 'Finish story' : 'Next page'}>{lastPage ? <Check /> : <ArrowRight />}</button></nav>
+        <ReadingConversation stage={lastPage ? 'after' : 'during'} />
         <details className="reading-parent"><summary>Words for this story</summary><p><strong>Section words:</strong> {story.focus.join(', ')}</p><p><strong>Check together:</strong> {support.join(', ') || 'None outside the review and section word banks.'}</p></details>
       </>}
       {finished && notice && <p role="status">{notice}</p>}

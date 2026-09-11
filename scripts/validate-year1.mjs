@@ -7,8 +7,16 @@ import {
   validateYear1Content,
 } from '../src/data/year1Profile.js';
 import { YEAR1_STORIES, storyWords, getStorySupportWords } from '../src/data/year1Stories.js';
+import { SCHOOL_WORD_LISTS, SCHOOL_WORDS } from '../src/data/schoolWords.js';
 
 const errors = validateYear1Content();
+const schoolCounts = {r1:73, y2:64, y34:106};
+for (const list of SCHOOL_WORD_LISTS) {
+  if (list.words.length !== schoolCounts[list.id]) errors.push(`School photo transcription count changed: ${list.id}`);
+  if (new Set(list.words.map(word => word.toLowerCase())).size !== list.words.length) errors.push(`Duplicate school word in ${list.id}`);
+  if (list.words.some(word => !/^[A-Za-z]+$/.test(word))) errors.push(`Unexpected school word spelling in ${list.id}`);
+}
+if (SCHOOL_WORDS.length !== 227) errors.push('Expected 227 different school words from the three photographs.');
 const ids = new Set();
 for (const story of YEAR1_STORIES) {
   if (ids.has(story.id)) errors.push(`Duplicate story: ${story.id}`);
@@ -58,3 +66,4 @@ console.log(
   `${YEAR1_WORDS.length} real words, ${YEAR1_PSEUDO_WORDS.length} parent-review-gated pseudo-words.`,
 );
 console.log(`${YEAR1_STORIES.length} original stories validated across ${YEAR1_BLOCKS.length} sections.`);
+console.log(`School photographs: ${SCHOOL_WORD_LISTS.map(list => `${list.label}: ${list.words.length}`).join(', ')}; ${SCHOOL_WORDS.length} different words.`);

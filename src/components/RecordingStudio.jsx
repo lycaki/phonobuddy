@@ -2,6 +2,15 @@ import { useState, useRef, useContext, useMemo } from 'react';
 import { PHONEMES, WORDS } from '../data/phonemes';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { RecordingsContext } from '../context/RecordingsContext';
+import { SCHOOL_WORDS } from '../data/schoolWords';
+import { YEAR1_WORDS } from '../data/year1Profile';
+
+const recordingWordBank = new Map(WORDS.map(word => [word.word.toLowerCase(), word]));
+// Keep existing recording IDs and metadata; append words that were not in the studio.
+for (const word of [...SCHOOL_WORDS, ...YEAR1_WORDS.map(item => item.word)]) {
+  if (!recordingWordBank.has(word.toLowerCase())) recordingWordBank.set(word.toLowerCase(), {word, school:true});
+}
+const RECORDABLE_WORDS = [...recordingWordBank.values()];
 
 export default function RecordingStudio() {
   const [recording, setRecording] = useState(false);
@@ -10,22 +19,25 @@ export default function RecordingStudio() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [tab, setTab] = useState("sounds"); // "sounds" or "words"
   const [wordPhaseFilter, setWordPhaseFilter] = useState(0);
+  const [wordSearch, setWordSearch] = useState('');
   const mediaRecorder = useRef(null);
   const chunks = useRef([]);
   const timerRef = useRef(null);
   const { saveRecording, getPlaybackUrl, hasRecording, playSound, syncStatus } = useContext(RecordingsContext);
 
   const isWord = selectedItem && selectedItem.startsWith("word:");
-  const selectedWordObj = isWord ? WORDS.find(w => w.word === selectedItem.slice(5)) : null;
+  const selectedWordObj = isWord ? RECORDABLE_WORDS.find(w => w.word === selectedItem.slice(5)) : null;
   const selectedPhoneme = !isWord ? PHONEMES.find(p => p.id === selectedItem) : null;
 
   const soundRecordedCount = PHONEMES.filter(p => hasRecording(p.id)).length;
-  const wordRecordedCount = WORDS.filter(w => hasRecording(`word:${w.word}`)).length;
+  const wordRecordedCount = RECORDABLE_WORDS.filter(w => hasRecording(`word:${w.word}`)).length;
 
   const filteredWords = useMemo(() => {
-    if (wordPhaseFilter === 0) return WORDS;
-    return WORDS.filter(w => w.phase === wordPhaseFilter);
-  }, [wordPhaseFilter]);
+    const words = wordPhaseFilter === 0 ? RECORDABLE_WORDS : wordPhaseFilter === 'school'
+      ? RECORDABLE_WORDS.filter(word => SCHOOL_WORDS.some(schoolWord => schoolWord.toLowerCase() === word.word.toLowerCase()))
+      : RECORDABLE_WORDS.filter(w => w.phase === wordPhaseFilter);
+    return words.filter(word => word.word.toLowerCase().includes(wordSearch.toLowerCase().trim()));
+  }, [wordPhaseFilter, wordSearch]);
 
   async function startRecording() {
     try {
@@ -115,7 +127,7 @@ export default function RecordingStudio() {
         <div>
           <h2 style={{fontFamily:"'Fredoka'",fontSize:28,color:"#ffd966",margin:0}}>Recording Studio</h2>
           <p style={{fontFamily:"'Andika'",fontSize:14,color:"#a0aec0",margin:0}}>
-            {soundRecordedCount}/{PHONEMES.length} sounds · {wordRecordedCount}/{WORDS.length} words
+            {soundRecordedCount}/{PHONEMES.length} sounds · {wordRecordedCount}/{RECORDABLE_WORDS.length} words
             {syncStatus === 'uploading' && <span style={{color:"#f4a261"}}> — uploading...</span>}
           </p>
         </div>
@@ -139,7 +151,7 @@ export default function RecordingStudio() {
               border: `2px solid ${tab === "words" ? "#b088f9" : "#2a3a5c"}`,
               borderRadius:12, padding:"10px 16px", fontSize:15, fontFamily:"'Fredoka'", cursor:"pointer",
             }}>
-              📖 Words ({wordRecordedCount}/{WORDS.length})
+              📖 Words ({wordRecordedCount}/{RECORDABLE_WORDS.length})
             </button>
           </div>
 
@@ -148,7 +160,7 @@ export default function RecordingStudio() {
             <div style={{
               background: tab === "sounds" ? "linear-gradient(90deg, #7bc67e, #4ecdc4)" : "linear-gradient(90deg, #b088f9, #7c5cbf)",
               height:"100%",
-              width: tab === "sounds" ? `${(soundRecordedCount / PHONEMES.length) * 100}%` : `${(wordRecordedCount / Math.max(1, WORDS.length)) * 100}%`,
+              width: tab === "sounds" ? `${(soundRecordedCount / PHONEMES.length) * 100}%` : `${(wordRecordedCount / Math.max(1, RECORDABLE_WORDS.length)) * 100}%`,
               borderRadius:8, transition:"width 0.5s"
             }} />
           </div>
@@ -211,7 +223,7 @@ export default function RecordingStudio() {
               </div>
 
               <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
-                {[{v:0,l:"All"},{v:2,l:"Phase 2"},{v:3,l:"Phase 3"},{v:4,l:"Phase 4"}].map(f => (
+                {[{v:0,l:"All"},{v:2,l:"Phase 2"},{v:3,l:"Phase 3"},{v:4,l:"Phase 4"},{v:'school',l:'School lists'}].map(f => (
                   <button key={f.v} onClick={() => setWordPhaseFilter(f.v)} style={{
                     background: wordPhaseFilter === f.v ? "#b088f9" : "#1a2744",
                     color: wordPhaseFilter === f.v ? "#0f1729" : "#a0aec0",
@@ -223,6 +235,7 @@ export default function RecordingStudio() {
                 ))}
               </div>
 
+              <label htmlFor="recording-word-search" style={{display:'block',marginBottom:12}}>Find recording word<input id="recording-word-search" type="search" value={wordSearch} onChange={event => setWordSearch(event.target.value)} style={{display:'block',boxSizing:'border-box',width:'100%',minHeight:44,marginTop:6,padding:8,font:'inherit'}} /></label>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(76px, 1fr))",gap:6}}>
                 {filteredWords.map(w => {
                   const wid = `word:${w.word}`;
@@ -234,7 +247,7 @@ export default function RecordingStudio() {
                       borderRadius:10, padding:"6px 2px", cursor:"pointer", position:"relative",
                     }}>
                       <span style={{fontSize:16,display:"block"}}>{w.image}</span>
-                      <span style={{fontFamily:"'Andika'",fontSize:14,color:"white",display:"block"}}>{w.word}</span>
+                      <span style={{fontFamily:"'Andika'",fontSize:14,color:"white",display:"block",overflowWrap:'anywhere'}}>{w.word}</span>
                       {recorded && <span style={{position:"absolute",top:2,right:2,fontSize:8}}>🎙️</span>}
                     </button>
                   );
@@ -249,17 +262,15 @@ export default function RecordingStudio() {
           {isWord ? (
             <>
               <div style={{fontSize:56,marginBottom:8}}>{selectedWordObj?.image}</div>
-              <div style={{background:"#1e2d4f",border:"4px solid #b088f9",borderRadius:24,padding:"16px 40px",display:"inline-block",marginBottom:12}}>
-                <span style={{fontFamily:"'Andika'",fontSize:56,color:"white"}}>{selectedWordObj?.word}</span>
+              <div style={{background:"#1e2d4f",border:"4px solid #b088f9",borderRadius:8,padding:"16px 12px",marginBottom:12,overflowWrap:'anywhere'}}>
+                <span style={{fontFamily:"'Andika'",fontSize:selectedWordObj?.word.length > 10 ? 32 : 42,color:"white"}}>{selectedWordObj?.word}</span>
               </div>
               <div style={{marginBottom:8}}>
                 <span style={{fontFamily:"'Fredoka'",fontSize:13,background:"rgba(176,136,249,0.2)",color:"#b088f9",padding:"4px 14px",borderRadius:20,border:"1px solid #b088f9"}}>
-                  {selectedWordObj?.structure} · Phase {selectedWordObj?.phase}
+                  {selectedWordObj?.school ? 'School word' : `${selectedWordObj?.structure} · Phase ${selectedWordObj?.phase}`}
                 </span>
               </div>
-              <p style={{fontFamily:"'Andika'",fontSize:14,color:"#a0aec0",margin:"0 0 16px"}}>
-                Sounds: {selectedWordObj?.phonemes.join(" · ")}
-              </p>
+              {selectedWordObj?.phonemes && <p style={{fontFamily:"'Andika'",fontSize:14,color:"#a0aec0",margin:"0 0 16px"}}>Sounds: {selectedWordObj.phonemes.join(" · ")}</p>}
             </>
           ) : (
             <>

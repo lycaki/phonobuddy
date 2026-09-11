@@ -1,0 +1,83 @@
+.school-paper { --ink: #263f48; background: #fff; color: var(--ink); padding: 24px; border-top: 4px double #486b80; border-bottom: 4px double #486b80; min-width: 0; letter-spacing: 0; }
+.school-paper *, .school-view-tabs * { box-sizing: border-box; }
+.school-paper h1 { font: 28px 'Andika', sans-serif; margin: 16px 0; }
+.school-paper h2 { font-size: 20px; line-height: 1.4; margin: 12px 0; overflow-wrap: anywhere; }
+.school-paper p { line-height: 1.6; }
+.school-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #9eafba; margin-bottom: 20px; }
+.school-heading p { font-size: 11px; color: #59717d; }
+.school-heading h1 { margin: 8px 0 20px; }
+.school-paper button, .school-view-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; background: #fff; border: 1px solid #829aa8; border-radius: 4px; color: #263f48; font: inherit; padding: 8px 12px; cursor: pointer; overflow-wrap: anywhere; }
+.school-paper button:disabled { opacity: .5; cursor: default; }
+.school-paper button:focus-visible, .school-paper input:focus-visible, .school-paper select:focus-visible, .school-paper textarea:focus-visible { outline: 3px solid #b24062; outline-offset: 2px; }
+.school-paper label { display: block; font-size: 14px; margin: 14px 0 6px; }
+.school-paper input:not([type=checkbox]), .school-paper select, .school-paper textarea { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #829aa8; border-radius: 3px; padding: 8px; background: #fff; color: #263f48; font: inherit; }
+.school-paper input[type=checkbox] { width: 24px; height: 24px; accent-color: #287c68; cursor: pointer; }
+.school-paper .school-primary { color: #fff; background: #287c68; border-color: #287c68; }
+.school-actions, .school-modes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0; }
+.school-modes button { flex: 1; }
+.school-modes [aria-pressed=true] { background: #e4f1ec; box-shadow: inset 0 -3px #287c68; border-color: #287c68; }
+.school-view-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.school-view-tabs button { min-width: 0; font-size: 14px; background: #e9eff3; }
+.school-view-tabs [aria-selected=true] { background: #fff; border-bottom: 4px solid #4ecdc4; }
+.school-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.school-tally { font-size: 14px; color: #526a76; }
+.school-checklist { border-collapse: collapse; width: 100%; table-layout: fixed; margin: 24px 0; }
+.school-checklist caption { text-align: left; padding: 10px 0; font-size: 14px; }
+.school-checklist th, .school-checklist td { border: 1px solid #9eafba; }
+.school-checklist thead th { background: #e8eef2; font-size: 14px; font-weight: normal; padding: 12px 4px; }
+.school-checklist th:first-child { width: auto; text-align: left; }
+.school-checklist th:not(:first-child), .school-checklist td { width: 64px; text-align: center; }
+.school-checklist td input { padding: 10px; margin: 10px; }
+.school-checklist .school-word-link { display: block; width: 100%; border: 0; border-radius: 0; font-size: 21px; text-align: left; padding: 12px; background: transparent; }
+.school-checklist tbody tr:nth-child(even) { background: #f4f8fa; }
+.school-guidance { border-top: 1px solid #9eafba; margin-top: 24px; padding: 14px 0; line-height: 1.6; font-size: 14px; }
+.school-guidance summary { cursor: pointer; min-height: 36px; }
+.school-guidance li { margin: 10px 0; }
+.school-note { font-size: 14px; display: flex; gap: 8px; align-items: center; color: #526a76; }
+.school-exercise-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 20px; }
+.school-exercise-bar button { flex-shrink: 0; width: 44px; }
+.school-big-word { font-size: 42px; min-height: 180px; display: flex; align-items: center; justify-content: center; border-top: 1px solid #acbfcd; border-bottom: 2px solid #6e93aa; overflow-wrap: anywhere; text-align: center; margin: 20px 0; }
+.spelling-stages { padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; gap: 4px; font-size: 13px; text-align: center; }
+.spelling-stages li { padding: 8px 0; border-bottom: 2px solid #b4c6d1; }
+.spelling-stages [aria-current=step] { border-color: #b24062; color: #91394e; font-weight: bold; }
+.school-notice { min-height: 48px; color: #91394e; font-size: 14px; }
+.school-verdict { margin: 12px 0; padding: 12px 0; border: 0; border-top: 1px solid #9eafba; display: flex; gap: 10px; flex-wrap: wrap; }
+.school-verdict legend { font-size: 14px; }
+.school-paper .school-toggle { display: flex; align-items: center; min-height: 44px; gap: 10px; }
+.school-batch-done { text-align: center; padding: 32px 0; min-height: 280px; }
+.school-batch-done .school-actions { justify-content: center; }
+.school-week { padding: 16px 0; border-top: 1px solid #9eafba; border-bottom: 1px solid #9eafba; }
+.school-week strong { color: #287c68; font-size: 24px; }
+.home-reading-entry { padding: 18px 0; border-bottom: 1px solid #9eafba; }
+.home-reading-entry header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.home-reading-entry p { margin: 8px 0; overflow-wrap: anywhere; }
+.reading-handnote { white-space: pre-wrap; }
+.reading-entry-form { padding: 20px 0; border-top: 2px solid #6e93aa; border-bottom: 2px solid #6e93aa; }
+.reading-entry-form button { font: inherit; }
+.reading-entry-form label { display: block; margin: 14px 0 6px; font-size: 14px; }
+.reading-entry-form input, .reading-entry-form select, .reading-entry-form textarea { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 8px; background: #fff; color: #263f48; border: 1px solid #829aa8; border-radius: 3px; font: inherit; }
+.reading-entry-form button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 48px; padding: 8px 12px; background: #fff; color: #263f48; border: 1px solid #829aa8; border-radius: 4px; cursor: pointer; }
+.reading-entry-form .school-primary { background: #287c68; color: #fff; }
+.story-reader .reading-entry-form { text-align: left; }
+.year1-reading { border-radius: 0; background: #fff; border-top: 4px double #486b80; border-bottom: 4px double #486b80; }
+.reading-conversation { text-align: left; }
+@media (max-width: 480px) {
+  .school-paper { padding: 16px; }
+  .school-paper h1 { font-size: 26px; }
+  .school-filters { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .school-checklist th:not(:first-child), .school-checklist td { width: 56px; }
+  .school-checklist .school-word-link { font-size: 19px; padding: 10px 8px; }
+  .school-big-word { font-size: 34px; }
+}
+@media print {
+  body:has(.school-paper) * { visibility: hidden; }
+  body:has(.school-paper) .school-paper, body:has(.school-paper) .school-paper * { visibility: visible; }
+  body:has(.school-paper) #root > div { overflow: visible !important; background: white !important; }
+  body:has(.school-paper) #root > div > div { padding: 0 !important; max-width: none !important; }
+  body:has(.school-paper) .school-view-tabs, body:has(.school-paper) nav[aria-label="Main navigation"] { display: none; }
+  .school-paper { position: static; color: #000; padding: 0; border: 0; }
+  .school-paper button, .school-paper label, .school-paper input:not([type=checkbox]), .school-paper select, .school-paper textarea, .school-paper .school-actions, .school-paper .school-filters, .school-paper .school-modes, .school-paper .school-guidance, .reading-entry-form { display: none; }
+  .school-checklist .school-word-link { display: block; color: #000; font-size: 14pt; }
+  .school-checklist tr, .home-reading-entry { break-inside: avoid; }
+  .school-checklist th, .school-checklist td { border-color: #666; }
+}

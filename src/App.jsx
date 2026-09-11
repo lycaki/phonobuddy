@@ -17,7 +17,7 @@ import SoundLibrary from './components/SoundLibrary';
 import SessionSummary from './components/SessionSummary';
 import BottomNav from './components/BottomNav';
 import Settings from './components/Settings';
-import WordPractice from './components/WordPractice';
+import WordPracticeHub from './components/school/WordPracticeHub';
 import SessionHistory from './components/SessionHistory';
 import QuickSetup from './components/QuickSetup';
 import Year1Reading from './components/year1/Year1Reading';
@@ -400,7 +400,7 @@ export default function App() {
           )}
 
           {/* WORD PRACTICE */}
-          {screen === "words" && <WordPractice progress={progress} />}
+          {screen === "words" && <WordPracticeHub progress={progress} />}
 
           {/* RECORDING STUDIO */}
           {screen === "studio" && <RecordingStudio />}

@@ -9,29 +9,9 @@ import {
   getYear1Coverage,
 } from '../../data/year1Profile';
 import { chooseSessionItems, getBlockReadiness, requiredSessionSounds } from '../../utils/year1Session';
-
-function VoxelDino({ walking = false }) {
-  return (
-    <div className={`voxel-dino ${walking ? 'is-walking' : ''}`} aria-label="blocky dinosaur">
-      <div className="dino-tail" />
-      <div className="dino-body" />
-      <div className="dino-head"><span className="dino-eye" /></div>
-      <div className="dino-leg dino-leg-one" />
-      <div className="dino-leg dino-leg-two" />
-    </div>
-  );
-}
-
-function VoxelRover({ driving = false }) {
-  return (
-    <div className={`voxel-rover ${driving ? 'is-driving' : ''}`} aria-label="blocky rover">
-      <div className="rover-cab" />
-      <div className="rover-body" />
-      <div className="rover-wheel rover-wheel-one" />
-      <div className="rover-wheel rover-wheel-two" />
-    </div>
-  );
-}
+import { ArtImage, DinoArt, WordPicture } from '../art/ReadingArt';
+import { getWordArt } from '../../data/wordArt';
+import { playDinoRoar } from '../../utils/dinoSounds';
 
 function FocusedWord({ item }) {
   const mapping = YEAR1_GPC_BY_ID[item.mappingId];
@@ -88,6 +68,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
   const [joinedCount, setJoinedCount] = useState(0);
   const [transformed, setTransformed] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
+  const [revealedMission, setRevealedMission] = useState('');
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [retries, setRetries] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -140,6 +121,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
     setJoinedCount(0);
     setTransformed(item.mission !== 'transform');
     setCelebrating(false);
+    setRevealedMission('');
     setRetries(0);
     setBusy(false);
     busyRef.current = false;
@@ -292,6 +274,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
       audioController.current = new AbortController();
       recordings.playSound(`word:${item.word}`, {
         waitForEnd: true, signal: audioController.current.signal,
+        onStart: () => { if (generation.current === token) setRevealedMission(`${round}:${item.id}`); },
       }).catch(() => {});
     }
 
@@ -309,10 +292,8 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
         </header>
 
         <section className="adventure-map-card">
-          <div className="adventure-sky">
-            <div className="pixel-cloud cloud-one" />
-            <div className="pixel-cloud cloud-two" />
-            <VoxelDino walking />
+          <div className="adventure-sky illustrated-valley">
+            <ArtImage file="dino-valley-v1.webp" alt="Dinosaur valley and the sound road" eager />
           </div>
           <div className="map-copy">
             <p className="eyebrow">DINO ROAD BUILDERS</p>
@@ -396,7 +377,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
     return (
       <div className="year1-adventure adventure-finish">
         <div className="finish-sun">★</div>
-        <VoxelDino walking />
+        <button className="dino-roar-button" onClick={() => { void playDinoRoar(); }} title="Dinosaur roar" aria-label="Dinosaur roar"><DinoArt pose="rover" eager /></button>
         <h1>Road complete!</h1>
         <p>You built {sessionCorrect} of {items.length} words.</p>
         {autoNotice && <p role="status">{autoNotice}</p>}
@@ -421,9 +402,10 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
         <span className="mission-count">{round + 1}/{items.length}</span>
       </header>
 
-      <section className={`mission-world ${celebrating ? 'is-celebrating' : ''}`}>
-        <div className="world-hills" />
-        {item?.pseudo ? <VoxelDino walking={celebrating} /> : <VoxelRover driving={celebrating} />}
+      <section className={`mission-world illustrated-mission ${celebrating ? 'is-celebrating' : ''}`}>
+        {celebrating && revealedMission === `${round}:${item.id}` && !item.pseudo && getWordArt(item.word)
+          ? <WordPicture word={item.word} />
+          : <DinoArt pose={item?.pseudo ? 'reader' : 'rover'} eager />}
         <div className="road-line" />
       </section>
 
@@ -445,7 +427,7 @@ export default function Year1Adventure({ year1, onExit, onOpenSettings, onReadSt
             {item?.mission === 'transform' && (
               <div className="transform-result"><span>{item.baseWord}</span><b> + magic e → </b><strong>{item.word}</strong></div>
             )}
-            <p className="mission-prompt">{roadReady ? 'Now read the whole word to Dad' : 'Touch the next blue block'}</p>
+            <p className="mission-prompt">{celebrating ? 'You read it!' : roadReady ? 'Now read the whole word to Dad' : 'Touch the next blue block'}</p>
             <div className="mission-word"><FocusedWord item={item} /></div>
 
             <div className="sound-road" aria-label="Sound road">

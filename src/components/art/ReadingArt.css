@@ -1,0 +1,87 @@
+.art-image { display: inline-flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 1; overflow: hidden; vertical-align: middle; }
+.art-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.dino-art { width: 108px; flex-shrink: 0; }
+.word-thumbnail { display: inline-block; width: 72px; max-width: 100%; aspect-ratio: 1; background: white; border-radius: 8px; overflow: hidden; vertical-align: middle; }
+.word-picture { display: block; width: 208px; max-width: 100%; margin: 8px auto; background: white; border: 0; border-radius: 8px; overflow: hidden; color: #174d42; padding: 0; }
+.word-picture-button { cursor: pointer; font: inherit; }
+.word-picture-button:hover .art-image { transform: translateY(-3px); }
+.word-picture-button .art-image { transition: transform .16s ease; }
+.picture-caption { display: flex; justify-content: center; align-items: center; gap: 8px; min-height: 38px; font-size: 19px; }
+.word-picture-button:focus-visible, .picture-words button:focus-visible, .dino-sound-toggle:focus-visible, .dino-roar-button:focus-visible { outline: 3px solid #bd3662; outline-offset: 3px; }
+.app-sound-bar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.dino-sound-toggle { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; color: #184c42; background: #fff; border: 1px solid #a7c9bf; border-radius: 8px; font: 13px 'Andika', sans-serif; cursor: pointer; }
+.dino-sound-toggle[aria-pressed="false"] { color: #586769; background: #eff3f3; }
+.home-art-header { position: relative; aspect-ratio: 3 / 2; margin: 0 -20px; overflow: hidden; }
+.home-art-header > .art-image { position: absolute; inset: 0; aspect-ratio: auto; height: 100%; }
+.home-art-header h1 { position: absolute; inset: 16px 0 auto; margin: 0; color: #164e56; text-shadow: 0 2px 1px #e9f9ff; font: 38px 'Fredoka', sans-serif; letter-spacing: 0; }
+.home-greeting { font-size: 16px; color: #285648; margin: 18px 0; }
+.home-shortcuts > button { background: white !important; border: 1px solid #bedcd2 !important; border-radius: 8px !important; padding: 12px 6px !important; min-height: 104px; }
+.home-shortcuts > button > div:last-child { color: #204d43 !important; font-size: 15px !important; }
+.home-shortcuts .dino-art, .home-shortcuts .word-thumbnail { width: 68px; height: 68px; }
+.illustrated-home > button:not(.home-dino-start) { color: #285648 !important; border-color: #9bc9bb !important; border-radius: 8px !important; }
+.year1-adventure .adventure-map-card { display: block; background: #f0faf4; border-radius: 8px; box-shadow: none; }
+.year1-adventure .illustrated-valley { width: 100%; height: auto; min-height: 0; aspect-ratio: 3 / 2; max-width: 680px; margin: auto; background: #d0edfa; image-rendering: auto; }
+.illustrated-valley > .art-image { aspect-ratio: 3 / 2; }
+.year1-adventure .map-copy { padding: 22px 24px; }
+.year1-adventure .map-copy h1 { font-size: 32px; line-height: 1.12; }
+.year1-adventure .child-instruction { font-size: 18px; }
+.year1-adventure .eyebrow, .year1-adventure .mission-prompt { letter-spacing: 0; }
+.year1-adventure .illustrated-mission { display: flex; align-items: center; justify-content: center; height: 196px; background: #e8f7ed; border-radius: 8px 8px 0 0; }
+.illustrated-mission > .dino-art { width: 240px; height: 185px; position: relative; z-index: 1; }
+.illustrated-mission > .word-picture { width: 174px; height: 174px; z-index: 1; }
+.illustrated-mission .road-line { background: repeating-linear-gradient(90deg, #efc342 0 32px, transparent 32px 52px); }
+.illustrated-mission.is-celebrating > .dino-art, .illustrated-mission.is-celebrating > .word-picture { animation: art-pop .38s ease-out; }
+.dino-roar-button { display: block; margin: 8px auto; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.dino-roar-button .dino-art { width: 240px; }
+.year1-adventure .mission-card { background: #fffef7; border-radius: 0 0 8px 8px; }
+.year1-reading .illustrated-story-entry { grid-template-columns: 72px minmax(0, 1fr) 24px; }
+.illustrated-story-entry > .dino-art { width: 72px; }
+.story-picture-slot { height: 218px; display: flex; align-items: center; justify-content: center; margin: 4px 0 12px; }
+.story-picture-slot .word-picture { width: 174px; margin: 0; }
+.story-picture-slot > .dino-art { width: 154px; }
+.story-reader .story-sentence { min-height: 128px; }
+.story-reader .story-picture-slot { height: 190px; }
+.story-reader .story-picture-slot .word-picture { width: 150px; }
+.story-reader .reader-notice { min-height: 28px; }
+.story-reader .reader-notice:empty { min-height: 0; margin: 0; }
+.picture-words { background: #fff; color: #244f43; padding: 20px; min-width: 0; }
+.picture-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.picture-heading p { margin: 0; font-size: 12px; color: #597267; }
+.picture-heading h1 { margin: 6px 0; font: 30px 'Fredoka', sans-serif; }
+.picture-stage { text-align: center; }
+.picture-reveal-slot { height: 286px; display: flex; justify-content: center; align-items: center; }
+.picture-reveal-slot > .dino-art { width: 190px; }
+.picture-stage .word-picture { width: 270px; }
+.picture-stage .picture-caption { display: none; }
+.picture-stage nav { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 12px; margin-top: 10px; }
+.picture-words button { cursor: pointer; font: inherit; }
+.picture-stage nav button { min-height: 48px; background: #edf7f1; color: #174d42; border: 1px solid #91bcab; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+.picture-stage nav .picture-hear { background: #20795f; color: white; font: 30px 'Andika', sans-serif; }
+.picture-notice { min-height: 28px; font-size: 14px; color: #93405f; margin: 10px 0; }
+.picture-word-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; border-top: 1px solid #cee1d7; padding-top: 20px; }
+.picture-word-grid > button { min-width: 0; min-height: 56px; padding: 8px 4px; background: white; border: 2px solid #e2ece7; border-radius: 8px; color: #244f43; }
+.picture-word-grid > button[aria-pressed="true"] { border-color: #bd3662; background: #fff3f7; }
+.picture-word-grid > button > span:last-child { display: block; font-size: 17px; overflow-wrap: anywhere; }
+.school-view-tabs[role="tablist"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.school-view-tabs[role="tablist"] > button { flex-direction: column; gap: 4px; padding: 8px 4px; font-size: 13px; }
+.school-heading .dino-art { width: 84px; }
+.school-exercise > .word-picture { width: 164px; }
+.school-paper .word-picture-button { display: block; padding: 0; border: 0; }
+@keyframes art-pop { from { transform: scale(.9) rotate(-4deg); } to { transform: scale(1) rotate(0); } }
+@media (max-width: 480px) {
+  .home-art-header h1 { font-size: 32px; top: 10px; }
+  .picture-words { padding: 16px; }
+  .picture-word-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .picture-heading h1 { font-size: 26px; }
+  .picture-heading .dino-art, .reading-heading .dino-art { width: 88px; }
+  .year1-reading .illustrated-story-entry { grid-template-columns: 58px minmax(0, 1fr) 20px; }
+  .illustrated-story-entry > .word-thumbnail, .illustrated-story-entry > .dino-art { width: 58px; }
+  .year1-adventure .map-copy h1 { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .word-picture-button .art-image { transition: none; transform: none; }
+  .illustrated-mission.is-celebrating > .dino-art, .illustrated-mission.is-celebrating > .word-picture { animation: none; }
+}
+@media print {
+  .art-image, .word-picture, .word-thumbnail, .dino-sound-toggle, .app-sound-bar, .story-picture-slot { display: none !important; }
+}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { saveRecordingBlob, getRecordingBlob, getAllRecordingIds, addMissingRecording } from '../utils/storage';
 import { speak, stopSpeaking } from '../utils/speech';
 import { playRecordedAudio } from '../utils/recordedAudio';
+import { stopDinoRoar } from '../utils/dinoSounds';
 
 export function useRecordings(familyCode) {
   const [recordingIds, setRecordingIds] = useState(new Set());
@@ -61,6 +62,7 @@ export function useRecordings(familyCode) {
   // Play a sound or word: ALWAYS check DB directly, never rely only on in-memory Set
   const playSound = useCallback(async (id, options = {}) => {
     if (options.signal?.aborted) return false;
+    stopDinoRoar();
     stopSpeaking();
     // Try DB directly — this avoids stale closure issues with recordingIds
     let recordingId = id;
@@ -92,7 +94,7 @@ export function useRecordings(familyCode) {
 
     // Word readers cannot safely model isolated phonemes or pseudo-words.
     if (!id.startsWith('word:') || options.allowTts === false) return false;
-    return speak(options.speechText || id.slice(5), undefined, { signal: options.signal });
+    return speak(options.speechText || id.slice(5), undefined, { signal: options.signal, onStart: options.onStart });
   }, []); // No dependencies — reads DB directly every time
 
   const pullFromCloud = useCallback(async (code) => {

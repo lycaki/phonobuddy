@@ -1,7 +1,9 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import PhonoBuddyOwl from '../PhonoBuddyOwl';
 import { RecordingsContext } from '../../context/RecordingsContext';
 import { PHONEMES } from '../../data/phonemes';
+import { WordPicture } from '../art/ReadingArt';
+import { getWordArt } from '../../data/wordArt';
 
 export default function Blending({ word, isAssessment = false, onResult }) {
   const [blendStep, setBlendStep] = useState(0);
@@ -11,14 +13,18 @@ export default function Blending({ word, isAssessment = false, onResult }) {
   const [retryPrompt, setRetryPrompt] = useState(false);
   const [slideValue, setSlideValue] = useState(0);
   const { playSound } = useContext(RecordingsContext);
+  const audio = useRef(null);
+  const timers = useRef([]);
 
   useEffect(() => {
+    const pendingTimers = timers.current;
     setBlendStep(0);
     setShowImage(false);
     setAnswered(false);
     setTappedSounds([]);
     setRetryPrompt(false);
     setSlideValue(0);
+    return () => { audio.current?.abort(); pendingTimers.forEach(clearTimeout); };
   }, [word.word]);
 
   function displaySound(id) {
@@ -36,12 +42,13 @@ export default function Blending({ word, isAssessment = false, onResult }) {
       setBlendStep(next);
       setSlideValue(0);
       if (next === 1) {
-        word.phonemes.forEach((p, i) => setTimeout(() => playSound(p), i * 400));
-      } else if (next === 2) {
-        // Prefer recorded word, fall back to TTS
-        setTimeout(() => playSound(`word:${word.word}`), 300);
+        word.phonemes.forEach((p, i) => timers.current.push(setTimeout(() => playSound(p), i * 400)));
       } else if (next === 3) {
-        setShowImage(true);
+        audio.current?.abort();
+        const controller = new AbortController();
+        audio.current = controller;
+        playSound(`word:${word.word}`, {waitForEnd:true,signal:controller.signal,
+          onStart: () => { if (!controller.signal.aborted) setShowImage(true); }}).catch(() => {});
       }
     }
   }
@@ -55,6 +62,8 @@ export default function Blending({ word, isAssessment = false, onResult }) {
   }
 
   function handleResult(correct) {
+    audio.current?.abort();
+    timers.current.forEach(clearTimeout);
     if (!correct && !isAssessment && !retryPrompt) {
       setRetryPrompt(true);
       setBlendStep(0);
@@ -76,7 +85,7 @@ export default function Blending({ word, isAssessment = false, onResult }) {
         {blendStep === 0 && (retryPrompt ? "Try the sounds once more." : "Let's blend this word!")}
         {blendStep === 1 && "Push the sounds together..."}
         {blendStep === 2 && "What does it say?"}
-        {blendStep === 3 && `${word.word}! ${word.image}`}
+        {blendStep === 3 && `${word.word}!`}
       </p>
 
       {/* Letter display */}
@@ -117,7 +126,7 @@ export default function Blending({ word, isAssessment = false, onResult }) {
       )}
 
       {showImage && (
-        <div style={{fontSize:72,marginBottom:16,animation:"bounceIn 0.5s ease"}}>{word.image}</div>
+        getWordArt(word.word) ? <WordPicture word={word.word} /> : <div style={{fontSize:72,marginBottom:16,animation:"bounceIn 0.5s ease"}}>{word.image}</div>
       )}
 
       {blendStep < 3 ? (

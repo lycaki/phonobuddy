@@ -4,7 +4,7 @@ import { RecordingsContext } from '../../context/RecordingsContext';
 import { SCHOOL_WORD_LISTS, SCHOOL_SPOKEN_WORDS, schoolWordId, selectSchoolBatch } from '../../data/schoolWords';
 import { loadSchoolWordChecks, saveSchoolWordCheck } from '../../utils/schoolReading';
 import { db, getSetting, setSetting } from '../../utils/storage';
-import PhonoBuddyOwl from '../PhonoBuddyOwl';
+import { DinoArt, WordPicture } from '../art/ReadingArt';
 import './SchoolReading.css';
 
 export default function SchoolPractice() {
@@ -79,7 +79,7 @@ export default function SchoolPractice() {
   }
 
   return <section className="school-paper">
-    <header className="school-heading"><div><p>SCHOOL READING RECORD</p><h1>Read and spell</h1></div><PhonoBuddyOwl size={62} mood="happy" /></header>
+    <header className="school-heading"><div><p>SCHOOL READING RECORD</p><h1>Read and spell</h1></div><DinoArt /></header>
     {!batch && <>
       <label htmlFor="school-list">School word list</label>
       <select id="school-list" value={listId} onChange={event => {setListId(event.target.value); setSearch('');}}>{SCHOOL_WORD_LISTS.map(list => <option key={list.id} value={list.id}>{list.label} ({list.words.length} words)</option>)}</select>
@@ -109,6 +109,7 @@ function PracticeBatch({words, mode, mark, pending, auto, onAutoChange, onClose,
   const [answer, setAnswer] = useState('');
   const [notice, setNotice] = useState('');
   const [done, setDone] = useState(false);
+  const [pictureWord, setPictureWord] = useState('');
   const audio = useRef(null);
   const lock = useRef(false);
   const {playSound} = useContext(RecordingsContext);
@@ -118,6 +119,7 @@ function PracticeBatch({words, mode, mark, pending, auto, onAutoChange, onClose,
   function move(next) {
     audio.current?.abort();
     setNotice(''); setAnswer(''); setStage('look');
+    setPictureWord('');
     if (next >= words.length) setDone(true);
     else { setIndex(Math.max(0, next)); setDone(false); }
   }
@@ -126,8 +128,10 @@ function PracticeBatch({words, mode, mark, pending, auto, onAutoChange, onClose,
     const controller = new AbortController();
     audio.current = controller;
     setNotice('');
+    setPictureWord('');
     try {
-      const played = await playSound(`word:${word}`, {waitForEnd:true, signal:controller.signal, speechText:SCHOOL_SPOKEN_WORDS[word] || word});
+      const played = await playSound(`word:${word}`, {waitForEnd:true, signal:controller.signal, speechText:SCHOOL_SPOKEN_WORDS[word] || word,
+        onStart: () => { if (!controller.signal.aborted && (mode === 'read' || stage === 'check')) setPictureWord(word); }});
       if (!played && !controller.signal.aborted) setNotice('Your grown-up can say this word.');
     } catch { if (!controller.signal.aborted) setNotice('Your grown-up can say this word.'); }
   }
@@ -143,6 +147,7 @@ function PracticeBatch({words, mode, mark, pending, auto, onAutoChange, onClose,
     {done ? <div className="school-batch-done"><Check size={40} /><h2>Batch complete</h2><div className="school-actions"><button className="school-primary" disabled={!hasNext || pending} onClick={onNext}><ArrowRight size={20} />Next batch</button><button disabled={pending} onClick={() => move(0)}><RotateCcw size={20} />Repeat batch</button><button disabled={pending} onClick={onClose}>Checklist</button></div></div> : <>
       {mode === 'spell' && <ol className="spelling-stages" aria-label="Spelling steps">{['Look', 'Cover', 'Write', 'Check'].map(label => <li key={label} aria-current={(stage === 'look' && label === 'Look') || (stage === 'write' && label === 'Write') || (stage === 'check' && label === 'Check') ? 'step' : undefined}>{label}</li>)}</ol>}
       <div className="school-big-word" aria-label={mode === 'spell' && stage === 'write' ? 'Word covered' : 'Practice word'}>{mode === 'spell' && stage === 'write' ? <EyeOff size={44} aria-hidden="true" /> : word}</div>
+      {pictureWord === word && !(mode === 'spell' && stage === 'write') && <WordPicture word={word} onHear={hear} />}
       <div className="school-actions"><button onClick={hear}><Volume2 size={20} />Hear word</button>{mode === 'spell' && stage === 'look' && <button className="school-primary" onClick={() => setStage('write')}><EyeOff size={20} />Cover word</button>}</div>
       {mode === 'spell' && stage === 'write' && <form onSubmit={event => {event.preventDefault(); setStage('check');}}>
         <label htmlFor="spelling-answer">Your spelling</label><input id="spelling-answer" value={answer} onChange={event => setAnswer(event.target.value)} autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} maxLength={40} />

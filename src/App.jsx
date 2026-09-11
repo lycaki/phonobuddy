@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PHONEMES, WORDS } from './data/phonemes';
 import { useProgress } from './hooks/useProgress';
 import { useSession, getCurriculumGap } from './hooks/useSession';
@@ -24,12 +24,20 @@ import Year1Reading from './components/year1/Year1Reading';
 import ParentResources from './components/ParentResources';
 import Year1Adventure from './components/year1/Year1Adventure';
 import { withTimeout } from './utils/withTimeout';
+import { ArtImage, DinoArt } from './components/art/ReadingArt';
+import DinoSoundToggle from './components/art/DinoSoundToggle';
+import { playDinoRoar, stopDinoRoar } from './utils/dinoSounds';
 
 const FIRST_SOUND_OPTIONS = PHONEMES.slice(0, 4);
 
 // Context for recordings — so activities can play custom sounds
 export default function App() {
-  const [screen, setScreen] = useState("home");
+  const [screen, updateScreen] = useState("home");
+  const setScreen = useCallback(next => {
+    if (next !== screen && !['studio', 'session'].includes(next) && screen !== 'studio') void playDinoRoar();
+    else stopDinoRoar();
+    updateScreen(next);
+  }, [screen]);
   const [familyCode, setFamilyCode] = useState(null);
   const [showParentDetails, setShowParentDetails] = useState(false);
   const [manualSyncStatus, setManualSyncStatus] = useState(null);
@@ -99,7 +107,7 @@ export default function App() {
     if (screen === "session" && !session.isActive && session.sessionActivities.length > 0) {
       setScreen("summary");
     }
-  }, [session.isActive, screen, session.sessionActivities.length]);
+  }, [session.isActive, screen, session.sessionActivities.length, setScreen]);
 
   if (!loaded || !year1.loaded) {
     return (
@@ -115,7 +123,7 @@ export default function App() {
 
   return (
     <RecordingsContext.Provider value={recordings}>
-      <div style={{minHeight:"100vh",background:"linear-gradient(180deg, #0f1729 0%, #162038 50%, #1a2744 100%)",fontFamily:"'Andika', sans-serif",color:"#f0f0f0",position:"relative",overflow:"hidden"}}>
+      <div style={{minHeight:"100vh",background:screen === 'home' ? '#eaf7f3' : '#153039',fontFamily:"'Andika', sans-serif",color:"#f0f0f0",position:"relative",overflow:"hidden"}}>
 
         {/* Stars background */}
         <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden"}}>
@@ -129,6 +137,7 @@ export default function App() {
 
         {/* Main Content */}
         <div style={{position:"relative",zIndex:1,maxWidth:screen === "year1" ? 980 : 600,margin:"0 auto",padding:screen === "year1" ? "16px 20px 34px" : "16px 20px 100px"}}>
+          {screen !== 'studio' && <div className="app-sound-bar"><DinoSoundToggle /></div>}
           {year1.error && <p role="alert">{year1.error}</p>}
 
           {/* HOME SCREEN */}
@@ -146,12 +155,12 @@ export default function App() {
               : greetings[sessionCount % greetings.length];
 
             return (
-            <div style={{textAlign:"center",paddingTop:32}}>
-              <div style={{animation:"float 3s ease-in-out infinite"}}>
-                <PhonoBuddyOwl size={130} mood="excited" />
-              </div>
-              <h1 style={{fontFamily:"'Fredoka', sans-serif",fontSize:38,color:"#ffd966",margin:"12px 0 4px",letterSpacing:1}}>PhonoBuddy</h1>
-              <p style={{fontFamily:"'Andika'",fontSize:16,color:"#a0aec0",margin:"0 0 16px"}}>{greeting}</p>
+            <div className="illustrated-home" style={{textAlign:"center"}}>
+              <header className="home-art-header">
+                <ArtImage file="dino-valley-v1.webp" alt="A friendly dinosaur and rover in a sunny valley" eager />
+                <h1>PhonoBuddy</h1>
+              </header>
+              <p className="home-greeting">{greeting}</p>
 
               <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
                 <span style={{fontFamily:"'Fredoka'",fontSize:14,color:"#ffd966",background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:999,padding:"6px 12px"}}>
@@ -222,7 +231,7 @@ export default function App() {
                 </>
               )}
 
-              <button onClick={() => setScreen("year1")} style={{background:"linear-gradient(135deg, #2a91e8, #176cc0)",border:"none",borderBottom:"7px solid #0b4f91",borderRadius:20,padding:"20px 28px",fontSize:23,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",boxShadow:"0 8px 32px rgba(30,120,205,0.32)",display:"block",width:"100%",maxWidth:390,margin:"0 auto 12px"}}>
+              <button className="home-dino-start" onClick={() => setScreen("year1")} style={{background:"#176f59",border:"none",borderBottom:"5px solid #104d3e",borderRadius:8,padding:"16px 20px",fontSize:23,fontFamily:"'Fredoka', sans-serif",color:"white",cursor:"pointer",display:"block",width:"100%",margin:"0 auto 12px"}}>
                 🦖 Year 1 Dino Road Builders
               </button>
 
@@ -251,13 +260,13 @@ export default function App() {
                 </div>
               )}
 
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+              <div className="home-shortcuts" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 <button onClick={() => setScreen("reading")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
-                  <div style={{fontSize:24}}>📚</div>
+                  <DinoArt />
                   <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#f0f0f0",marginTop:4}}>Stories</div>
                 </button>
                 <button onClick={() => setScreen("words")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>
-                  <div style={{fontSize:24}}>📝</div>
+                  <DinoArt pose="rover" />
                   <div style={{fontFamily:"'Fredoka'",fontSize:13,color:"#f0f0f0",marginTop:4}}>Words</div>
                 </button>
                 <button onClick={() => setScreen("library")} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:16,padding:16,cursor:"pointer",textAlign:"center"}}>

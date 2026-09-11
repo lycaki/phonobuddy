@@ -1,4 +1,5 @@
 import { getSetting, setSetting } from './storage';
+import { holdDinoSounds, stopDinoRoar } from './dinoSounds';
 
 export const DEFAULT_READING_VOICE = { enabled: true, voiceURI: 'auto', rate: 0.9 };
 let preferences;
@@ -67,7 +68,8 @@ function waitForVoices(synth, signal) {
   });
 }
 
-export async function speak(text, rate, { signal } = {}) {
+export async function speak(text, rate, { signal, onStart } = {}) {
+  stopDinoRoar();
   const synth = globalThis.speechSynthesis;
   if (!synth || !text?.trim() || signal?.aborted) return false;
   stopSpeaking();
@@ -81,6 +83,7 @@ export async function speak(text, rate, { signal } = {}) {
   if (!voice) return false;
   return new Promise(resolve => {
     const utterance = new SpeechSynthesisUtterance(text);
+    const release = holdDinoSounds();
     utterance.voice = voice;
     utterance.lang = voice.lang;
     utterance.rate = rate ?? prefs.rate;
@@ -88,9 +91,11 @@ export async function speak(text, rate, { signal } = {}) {
     const finish = success => {
       if (settled) return;
       settled = true;
+      release();
       clearTimeout(timer);
       signal?.removeEventListener('abort', cancel);
       utterance.onend = null;
+      utterance.onstart = null;
       utterance.onerror = null;
       if (activeStop === cancel) activeStop = null;
       resolve(success);
@@ -100,6 +105,7 @@ export async function speak(text, rate, { signal } = {}) {
     activeStop = cancel;
     signal?.addEventListener('abort', cancel, { once: true });
     utterance.onend = () => finish(true);
+    utterance.onstart = () => { if (!settled && !signal?.aborted) onStart?.(); };
     utterance.onerror = () => finish(false);
     try { synth.speak(utterance); } catch { finish(false); }
   });

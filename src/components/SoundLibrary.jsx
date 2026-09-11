@@ -101,7 +101,6 @@ export default function SoundLibrary({ progress }) {
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(80px, 1fr))",gap:8}}>
                 {exampleWords.map(w => (
                   <button key={w.word} onClick={() => playSound(`word:${w.word}`)} style={{background:"#1a2744",border:"2px solid #2a3a5c",borderRadius:12,padding:8,cursor:"pointer",textAlign:"center"}}>
-                    <div style={{fontSize:22}}>{w.image}</div>
                     <div style={{fontFamily:"'Andika'",fontSize:20,color:"white"}}>{w.word}</div>
                   </button>
                 ))}

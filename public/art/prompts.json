@@ -1,0 +1,108 @@
+{
+  "date": "2026-09-11",
+  "mode": "Built-in image_gen",
+  "assets": [
+    {
+      "name": "dino-valley",
+      "prompt": "Use case: illustration-story. Asset type: wide in-game dinosaur landscape for a phonics reading app for children aged 5-6. Create an original, polished children's picture-book scene: a friendly small turquoise dinosaur with coral back plates and a yellow explorer neckerchief, standing by a winding teal stepping-stone road through a lush green prehistoric valley. A little rounded sunny-yellow rover waits nearby. Bright blue sky, distant rounded mountains, cheerful large leaf plants at the sides, soft painterly texture, clear shapes with lively appealing personality, high-quality animated-film concept art, not blocky pixel art. Wide landscape 3:2, whole dinosaur visible centrally, no foreground objects covering it, landscape fills frame. No letters, words, numbers, signs, logos or watermark; no frightening teeth; no UI. Keep the scene crisp and colourful, not dark, not blurred.",
+      "file": "dino-valley-v1.webp",
+      "sourceFile": "exec-0292eeba-e940-4fba-b1e1-898a85c25c7a.png"
+    },
+    {
+      "name": "frog",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One cheerful green frog, full body, sitting on a small lily pad, lively bright eyes, recognisable webbed feet. Nothing else.",
+      "file": "frog-v1.webp",
+      "sourceFile": "exec-b30ba5c0-861c-4229-b321-13aaf7a96f62.png"
+    },
+    {
+      "name": "clock",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One cheerful round yellow alarm clock with two bells and simple readable analogue clock face, hour and minute hands, clear twelve hour markers but no numerals. No face or eyes. Nothing else.",
+      "file": "clock-v1.webp",
+      "sourceFile": "exec-b6c805b6-819f-4cc9-b4f2-21802bdb05e8.png"
+    },
+    {
+      "name": "fish",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One friendly small orange goldfish with clear fins and tail, full body in side view with expressive natural eyes. No water bowl, no other fish. Nothing else.",
+      "file": "fish-v1.webp",
+      "sourceFile": "exec-84f50d1a-0f9c-42c6-9008-c46aa47feb41.png"
+    },
+    {
+      "name": "dino-reader",
+      "prompt": "Use case: illustration-story. Asset type: dinosaur mascot for a children's phonics app. Reference image: use only the identity and rendering style of the turquoise dinosaur, coral back plates and yellow neckerchief from the reference. Create a new pose of this same friendly dinosaur sitting comfortably and enjoying an open red picture book, looking up with an inviting happy expression. Whole dinosaur and tail visible, balanced square composition with margin. High quality animated-film picture-book art, bright, softly tactile, crisp silhouette. Genuinely transparent background, preserve alpha; no background scene, white rectangle, text, letters, logos or watermark. This is one mascot asset, not a sprite sheet.",
+      "file": "dino-reader-v1.webp",
+      "sourceFile": "exec-e0d233f6-b4b0-45d7-a646-f517a8696dfc.png"
+    },
+    {
+      "name": "bird",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One friendly small blue songbird perched on a tiny twig, complete body, two wings, little beak and natural bright eyes. Nothing else.",
+      "file": "bird-v1.webp",
+      "sourceFile": "exec-7cfde668-aded-475d-9c8c-808466088902.png"
+    },
+    {
+      "name": "house",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One small inviting storybook house, a red tiled roof, white walls, green front door, two windows and chimney. Complete house, no surrounding village, people or animals.",
+      "file": "house-v1.webp",
+      "sourceFile": "exec-59e60cd1-e478-48b7-bcab-78635b409699.png"
+    },
+    {
+      "name": "mouse",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One friendly small grey mouse with large rounded ears, whiskers and a long curling pink tail, sitting, whole body visible. Nothing else.",
+      "file": "mouse-v1.webp",
+      "sourceFile": "exec-f4d50059-7edb-416c-b2c5-2e1adc16b043.png"
+    },
+    {
+      "name": "ball",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One bright red and yellow striped inflated play ball, round, simple glossy rubber toy, no face, no other objects.",
+      "file": "ball-v1.webp",
+      "sourceFile": "exec-8ddfa811-1fe5-4dcf-9ca1-ed98b190a63b.png"
+    },
+    {
+      "name": "kite",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One red, yellow and blue diamond-shaped kite with a curved string and three bows on its tail, the whole kite and tail visible. No sky or people.",
+      "file": "kite-v1.webp",
+      "sourceFile": "exec-c7ad2d0a-90ef-483c-83cc-3a86e2d0b8e7.png"
+    },
+    {
+      "name": "boat",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One charming small blue wooden sailing boat with a red and white sail, full hull and mast visible, no passengers, no surrounding sea.",
+      "file": "boat-v1.webp",
+      "sourceFile": "exec-31d4cd52-2b11-4a3d-a0b7-facdf1aaab41.png"
+    },
+    {
+      "name": "cloud",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One fluffy white cloud against a flat pale sky-blue background (override the white background for this one asset so the cloud is clearly visible). Soft round white lobes, no face, no sun, rain or other objects.",
+      "file": "cloud-v1.webp",
+      "sourceFile": "exec-23fadd54-70cb-4bd4-9e15-8e8710096382.png"
+    },
+    {
+      "name": "pie",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One small golden baked fruit pie in a teal pie dish, lattice pastry top with a little red filling visible. Entire dish visible, no face, no cutlery, no other food.",
+      "file": "pie-v1.webp",
+      "sourceFile": "exec-e60ff739-9f37-4942-ba1d-03751f2c1417.png"
+    },
+    {
+      "name": "lamb",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One friendly fluffy white lamb standing, whole body and four hooves visible, soft pink ears, natural bright eyes, no accessories or other objects.",
+      "file": "lamb-v1.webp",
+      "sourceFile": "exec-41a7a732-d16f-49f6-813c-e66889a9f9a5.png"
+    },
+    {
+      "name": "dino-rover",
+      "prompt": "Use case: illustration-story. Asset type: dinosaur game character, transparent cutout. Reference: use the turquoise dinosaur with coral back plates and yellow neckerchief and the small yellow rover from the supplied reference, matching their identity and animated-film rendering. Make one new complete composition of the friendly dinosaur riding in the open cab of the sunny-yellow rounded toy-like rover, waving one little hand. Rover in three-quarter side view facing right, all wheels and the entire dinosaur visible, crisp silhouette with 10% margin all around. Playful ages 5-6, softly tactile, polished. True transparent background with alpha. No landscape, white rectangle, text, numbers, logos, watermarks or frame.",
+      "file": "dino-rover-v1.webp",
+      "sourceFile": "exec-948130b7-5c50-4d4a-84ee-e284cf7d40c5.png"
+    },
+    {
+      "name": "cat",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One friendly ginger tabby cat sitting, whole body and curling tail visible, soft fur and bright natural eyes. No accessories or other objects.",
+      "file": "cat-v1.webp",
+      "sourceFile": "exec-380b9630-4f7c-44c7-a379-90aeb30022b8.png"
+    },
+    {
+      "name": "dog",
+      "prompt": "Use case: illustration-story. Asset type: single word picture for a phonics app for ages 5-6. Style: polished animated-film picture-book illustration, softly painted tactile forms, crisp silhouette, charming and lively, recognisable subject, bright natural colours, gentle studio light. Composition: square, entire subject centred with generous 12% margin, pure white background, subtle soft ground shadow where appropriate. No words, letters, logos, watermark, decorative frame or UI. Subject: One friendly small golden puppy sitting with floppy ears and a wagging tail, whole body visible, soft fur and bright natural eyes. No accessories or other objects.",
+      "file": "dog-v1.webp",
+      "sourceFile": "exec-3caa2c1a-8263-4a57-b1b2-8a6a8e2ed906.png"
+    }
+  ]
+}

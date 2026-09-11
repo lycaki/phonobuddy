@@ -5,6 +5,9 @@ import { RecordingsContext } from '../context/RecordingsContext';
 import { speak } from '../utils/speech';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { db } from '../utils/storage';
+import { DinoArt, WordPicture } from './art/ReadingArt';
+import { getWordArt } from '../data/wordArt';
+import { playDinoRoar } from '../utils/dinoSounds';
 
 export default function Reading({ progress = {} }) {
   const [selectedStory, setSelectedStory] = useState(null);
@@ -103,7 +106,7 @@ export default function Reading({ progress = {} }) {
                     background:"#1a2744",border:`2px solid ${isReady ? "#7bc67e" : hist ? d.color : "#2a3a5c"}`,borderRadius:14,
                     padding:14,cursor:"pointer",textAlign:"left",position:"relative",
                   }}>
-                    <div style={{fontSize:36,marginBottom:6}}>{story.emoji}</div>
+                    <DinoArt />
                     <div style={{fontFamily:"'Fredoka'",fontSize:15,color:"#f0f0f0",lineHeight:1.2,marginBottom:4}}>
                       {story.title}
                     </div>
@@ -138,6 +141,7 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
   const [readMode, setReadMode] = useState("help");
   const [showHelp, setShowHelp] = useState(true);
   const [voiceNotice, setVoiceNotice] = useState('');
+  const [pictureWord, setPictureWord] = useState('');
   const audio = useRef(null);
   useEffect(() => () => audio.current?.abort(), []);
   const { playSound } = useContext(RecordingsContext);
@@ -153,12 +157,14 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
     // Strip punctuation for lookup
     const clean = rawWord.toLowerCase().replace(/[^a-z']/g, '');
     if (!clean) return;
+    setPictureWord('');
     audio.current?.abort();
     const controller = new AbortController();
     audio.current = controller;
     setVoiceNotice('');
     try {
-      const played = await playSound(`word:${clean}`, {waitForEnd:true, signal:controller.signal});
+      const played = await playSound(`word:${clean}`, {waitForEnd:true, signal:controller.signal,
+        onStart: () => { if (!controller.signal.aborted) setPictureWord(clean); }});
       if (!played && !controller.signal.aborted) setVoiceNotice(`Read together: ${clean}`);
     } catch {
       if (!controller.signal.aborted) setVoiceNotice(`Read together: ${clean}`);
@@ -176,6 +182,8 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
 
   function next() {
     audio.current?.abort();
+    setPictureWord('');
+    void playDinoRoar();
     setVoiceNotice('');
     if (isLast) {
       onComplete();
@@ -187,6 +195,8 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
 
   function back() {
     audio.current?.abort();
+    setPictureWord('');
+    void playDinoRoar();
     setVoiceNotice('');
     if (sentenceIdx > 0) {
       setSentenceIdx(i => i - 1);
@@ -204,7 +214,6 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
           ← Stories
         </button>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:16}}>{story.emoji}</span>
           <span style={{fontFamily:"'Fredoka'",fontSize:14,color:"#f0f0f0"}}>{story.title}</span>
           <span style={{background:difficulty.color,color:"#0f1729",padding:"2px 8px",borderRadius:6,fontSize:10,fontFamily:"'Fredoka'"}}>
             {difficulty.label}
@@ -215,6 +224,7 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
         </div>
       </div>
 
+      {(readMode === 'help' || showHelp) && <div className="story-picture-slot">{getWordArt(pictureWord) ? <WordPicture word={pictureWord} onHear={tapWord} /> : <DinoArt />}</div>}
       {/* Progress bar */}
       <div style={{background:"#0f1729",borderRadius:6,height:6,marginBottom:24,overflow:"hidden"}}>
         <div style={{background:`linear-gradient(90deg, ${difficulty.color}, ${difficulty.color}aa)`,height:"100%",width:`${progress}%`,borderRadius:6,transition:"width 0.4s"}} />
@@ -225,7 +235,7 @@ function StoryReader({ story, getWordReadiness, onClose, onComplete }) {
           { id:"help", label:"Read with help" },
           { id:"myself", label:"Read myself" },
         ].map(mode => (
-          <button key={mode.id} onClick={() => { audio.current?.abort(); setVoiceNotice(''); setReadMode(mode.id); setShowHelp(mode.id === "help"); }} style={{
+          <button key={mode.id} onClick={() => { audio.current?.abort(); setVoiceNotice(''); setPictureWord(''); setReadMode(mode.id); setShowHelp(mode.id === "help"); }} style={{
             background: readMode === mode.id ? "#4ecdc4" : "#1a2744",
             border:`2px solid ${readMode === mode.id ? "#4ecdc4" : "#2a3a5c"}`,
             borderRadius:12,

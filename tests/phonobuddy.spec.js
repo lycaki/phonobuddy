@@ -87,6 +87,26 @@ async function finishWord(page, doubleTap = false) {
   await yes.evaluate(button => { button.click(); button.click(); });
 }
 
+test('dino word pictures wait for the parent verdict and disappear at the next mission', async ({page}, testInfo) => {
+  await setup(page);
+  await page.evaluate(async () => {
+    const {db} = await import('/phonobuddy/src/utils/storage.js');
+    await db.recordings.put({phonemeId:'word:frog',blob:new Blob(['dad-frog']),timestamp:1});
+  });
+  await start(page);
+  await expect(page.locator('.mission-word')).toHaveText('frog');
+  await expect(page.locator('.mission-world .word-picture')).toHaveCount(0);
+  const pieces = page.locator('.sound-road-piece');
+  for (let i = 0; i < await pieces.count(); i++) await pieces.nth(i).click();
+  await expect(page.locator('.mission-world .word-picture')).toHaveCount(0);
+  await page.getByRole('button', {name:/Yes/}).click();
+  await expect(page.locator('.mission-world .word-picture img')).toHaveAttribute('src', /frog-v1.webp$/);
+  await page.screenshot({path:testInfo.outputPath('dino-reveal.png')});
+  await expect(page.locator('.mission-count')).toHaveText('2/6');
+  await expect(page.locator('.mission-world .word-picture')).toHaveCount(0);
+  await page.screenshot({path:testInfo.outputPath('dino-next-word.png')});
+});
+
 test('two full roads continue with pending cloud writes and rapid taps', async ({ page }) => {
   await setup(page, { family:true });
   await start(page);

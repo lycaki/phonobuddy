@@ -4,6 +4,7 @@ import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { RecordingsContext } from '../context/RecordingsContext';
 import { SCHOOL_WORDS } from '../data/schoolWords';
 import { YEAR1_WORDS } from '../data/year1Profile';
+import { playRecordedAudio } from '../utils/recordedAudio';
 
 const recordingWordBank = new Map(WORDS.map(word => [word.word.toLowerCase(), word]));
 // Keep existing recording IDs and metadata; append words that were not in the studio.
@@ -336,7 +337,7 @@ export default function RecordingStudio() {
             <div style={{background: isWord ? "#2a1a3a" : "#1a3a1a",border:`2px solid ${isWord ? "#b088f9" : "#7bc67e"}`,borderRadius:16,padding:16,marginBottom:16,maxWidth:360,margin:"0 auto 16px"}}>
               <p style={{fontFamily:"'Fredoka'",fontSize:14,color: isWord ? "#b088f9" : "#7bc67e",margin:"0 0 10px"}}>🎙️ Your recording</p>
               <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-                <button onClick={() => new Audio(audioUrl).play()} style={{
+                <button onClick={() => playRecordedAudio(audioUrl)} style={{
                   background: isWord ? "#3a2a4a" : "#2a5a2a",border:`2px solid ${isWord ? "#b088f9" : "#7bc67e"}`,borderRadius:12,
                   padding:"10px 24px",fontSize:16,color: isWord ? "#b088f9" : "#7bc67e",cursor:"pointer",fontFamily:"'Fredoka'"
                 }}>

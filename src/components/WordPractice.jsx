@@ -3,6 +3,8 @@ import { SkipForward } from 'lucide-react';
 import { WORDS, PHONEMES, TRICKY_WORDS } from '../data/phonemes';
 import PhonoBuddyOwl from './PhonoBuddyOwl';
 import { RecordingsContext } from '../context/RecordingsContext';
+import { DinoArt, WordPicture } from './art/ReadingArt';
+import { getWordArt } from '../data/wordArt';
 
 export default function WordPractice({ progress }) {
   const [selectedPhase, setSelectedPhase] = useState(0); // 0 = all
@@ -12,7 +14,9 @@ export default function WordPractice({ progress }) {
   const [showConfusions, setShowConfusions] = useState(false);
   const { playSound } = useContext(RecordingsContext);
   const audioTimers = useRef([]);
-  useEffect(() => () => audioTimers.current.forEach(clearTimeout), []);
+  const wordAudio = useRef(null);
+  const [revealedWord, setRevealedWord] = useState('');
+  useEffect(() => () => { audioTimers.current.forEach(clearTimeout); wordAudio.current?.abort(); }, []);
 
   const confusionSets = [
     { label: "b / d", ids: ["b", "d"] },
@@ -48,10 +52,22 @@ export default function WordPractice({ progress }) {
   }, [selectedPhase]);
 
   function openWord(word) {
+    wordAudio.current?.abort();
+    setRevealedWord('');
     audioTimers.current.forEach(clearTimeout);
     audioTimers.current = [];
     setSelectedWord(word);
     setBlendStep(0);
+  }
+
+  function hearWholeWord() {
+    audioTimers.current.forEach(clearTimeout);
+    wordAudio.current?.abort();
+    const controller = new AbortController();
+    wordAudio.current = controller;
+    setRevealedWord('');
+    return playSound(`word:${selectedWord.word}`, {waitForEnd:true, signal:controller.signal,
+      onStart: () => { if (!controller.signal.aborted) setRevealedWord(selectedWord.word); }}).catch(() => false);
   }
 
   function handleBlendStep() {
@@ -61,7 +77,7 @@ export default function WordPractice({ progress }) {
       selectedWord.phonemes.forEach((p, i) => audioTimers.current.push(setTimeout(() => playSound(p), i * 450)));
     } else if (next === 2) {
       // Use recorded word if available, falls back to TTS inside playSound
-      audioTimers.current.push(setTimeout(() => playSound(`word:${selectedWord.word}`), 300));
+      audioTimers.current.push(setTimeout(hearWholeWord, 300));
     }
   }
 
@@ -114,7 +130,9 @@ export default function WordPractice({ progress }) {
           </button>
           {/* Big word display with blend animation */}
           <div style={{background:"rgba(26,39,68,0.6)",borderRadius:24,padding:32,backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.05)",marginBottom:20}}>
-            <div style={{fontSize:56,marginBottom:8}}>{selectedWord.image}</div>
+            <div className="story-picture-slot">{revealedWord === selectedWord.word
+              ? getWordArt(selectedWord.word) ? <WordPicture word={selectedWord.word} onHear={hearWholeWord} /> : <div style={{fontSize:56,marginBottom:8}}>{selectedWord.image}</div>
+              : <DinoArt />}</div>
 
             <div style={{display:"flex",justifyContent:"center",gap:blendStep >= 1 ? 4 : 16,transition:"gap 0.5s ease",marginBottom:20}}>
               {selectedWord.phonemes.map((p, i) => (
@@ -147,7 +165,7 @@ export default function WordPractice({ progress }) {
                 {blendStep === 0 ? "🔊 Sound it out" : "🔗 Blend together"}
               </button>
             ) : (
-              <button onClick={() => playSound(`word:${selectedWord.word}`)} style={{background:"#4ecdc4",border:"none",borderRadius:16,padding:"14px 36px",fontSize:18,fontFamily:"'Fredoka'",color:"#0f1729",cursor:"pointer"}}>
+              <button onClick={hearWholeWord} style={{background:"#4ecdc4",border:"none",borderRadius:16,padding:"14px 36px",fontSize:18,fontFamily:"'Fredoka'",color:"#0f1729",cursor:"pointer"}}>
                 🔊 Hear it again
               </button>
             )}
@@ -263,7 +281,6 @@ export default function WordPractice({ progress }) {
                   onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
                   onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                   >
-                    <div style={{fontSize:28}}>{w.image}</div>
                     <div style={{fontFamily:"'Andika'",fontSize:24,color:"white",margin:"2px 0"}}>{w.word}</div>
                     <div style={{fontFamily:"'Andika'",fontSize:10,color:"#4ecdc4"}}>
                       {w.structure || w.phonemes.map(displaySound).join("·")}

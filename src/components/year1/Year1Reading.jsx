@@ -5,7 +5,9 @@ import { YEAR1_STORIES, getStorySupportWords, storyWords } from '../../data/year
 import { db } from '../../utils/storage';
 import { RecordingsContext } from '../../context/RecordingsContext';
 import Reading from '../Reading';
-import PhonoBuddyOwl from '../PhonoBuddyOwl';
+import { DinoArt, WordPicture } from '../art/ReadingArt';
+import { getWordArt } from '../../data/wordArt';
+import { playDinoRoar } from '../../utils/dinoSounds';
 import HomeReadingRecord, { ReadingConversation, ReadingEntryForm } from '../school/HomeReadingRecord';
 import './Year1Reading.css';
 
@@ -38,7 +40,7 @@ export default function Year1Reading({ year1, progress }) {
   const block = YEAR1_BLOCKS.find(entry => entry.id === year1.selectedBlock) || YEAR1_BLOCKS[0];
   return (
     <div className="year1-reading">
-      <header className="reading-heading"><div><p>YEAR 1</p><h1>Story shelf</h1></div><PhonoBuddyOwl size={72} mood="happy" /></header>
+      <header className="reading-heading"><div><p>YEAR 1</p><h1>Story shelf</h1></div><DinoArt /></header>
       <button className="reading-return" onClick={() => setRecord(true)}><NotebookPen size={20} />Reading record</button>
       <label className="section-choice" htmlFor="story-section">Reading section</label>
       <select id="story-section" value={block.id} onChange={event => year1.setSelectedBlock(event.target.value)}>
@@ -50,8 +52,8 @@ export default function Year1Reading({ year1, progress }) {
       <div className="story-list">
         {YEAR1_STORIES.filter(story => story.block === block.id).map((story, index) => {
           const saved = history[story.id];
-          return <button className="story-entry" key={story.id} disabled={!loaded || Boolean(error)} onClick={() => setSelected(story)}>
-            <BookOpen aria-hidden="true" size={28} />
+          return <button className="story-entry illustrated-story-entry" key={story.id} disabled={!loaded || Boolean(error)} onClick={() => { void playDinoRoar(); setSelected(story); }}>
+            <DinoArt />
             <span><small>STORY {index + 1} · {story.sentences.length} pages</small><strong>{story.title}</strong>
               <span className="story-focus">{story.focus.join(' · ')}</span>
               <small>{saved?.page > 0 ? `Continue at page ${saved.page + 1}` : 'Read together'}{saved?.reads ? ` · Read ${saved.reads} ${saved.reads === 1 ? 'time' : 'times'}` : ''}</small>
@@ -72,6 +74,7 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
   const [finished, setFinished] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [pictureWord, setPictureWord] = useState('');
   const [logging, setLogging] = useState(false);
   const [logged, setLogged] = useState(false);
   const saving = useRef(false);
@@ -90,7 +93,9 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
     saving.current = true;
     setBusy(true);
     setNotice('');
+    setPictureWord('');
     audio.current?.abort();
+    void playDinoRoar();
     try {
       const value = await db.transaction('rw', db.settings, async () => {
         const current = (await db.settings.get(bookmarkKey(story.id)))?.value || {};
@@ -117,8 +122,10 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
     const controller = new AbortController();
     audio.current = controller;
     setNotice('');
+    setPictureWord('');
     try {
-      const played = await recordings.playSound(`word:${word}`, { waitForEnd: true, signal: controller.signal });
+      const played = await recordings.playSound(`word:${word}`, { waitForEnd: true, signal: controller.signal,
+        onStart: () => { if (!controller.signal.aborted) setPictureWord(word); } });
       if (!played && !controller.signal.aborted) setNotice(`Dad's turn: ${word}`);
     } catch {
       if (!controller.signal.aborted) setNotice(`Dad's turn: ${word}`);
@@ -128,7 +135,7 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
   return <article className="year1-reading story-reader">
     <header className="reader-bar"><button onClick={onClose} title="Back to stories" aria-label="Back to stories"><ArrowLeft /></button><span>{story.title}</span><button onClick={() => window.print()} title="Print story" aria-label="Print story"><Printer /></button></header>
     <div className="reader-screen">
-      <div className="reader-options"><span>Page {page + 1} of {story.sentences.length}</span><label><input type="checkbox" checked={help} onChange={event => { setHelp(event.target.checked); setNotice(''); audio.current?.abort(); }} /> Dad's help</label></div>
+      <div className="reader-options"><span>Page {page + 1} of {story.sentences.length}</span><label><input type="checkbox" checked={help} onChange={event => { setHelp(event.target.checked); setNotice(''); setPictureWord(''); audio.current?.abort(); }} /> Dad's help</label></div>
       {finished ? <><div className="story-finish"><Check size={44} /><h1 ref={heading} tabIndex={-1}>Story finished</h1><p>{story.title}</p><button onClick={() => move(0)} disabled={busy}><RotateCcw size={20} /> Read again</button><button onClick={onNext}><BookOpen size={20} /> Next story</button>{!logged && !logging && <button onClick={() => setLogging(true)}><NotebookPen size={20} />Add to reading record</button>}{logged && <p>Added to your reading record.</p>}</div>{logging && <ReadingEntryForm title={story.title} onCancel={() => setLogging(false)} onSaved={() => {setLogging(false); setLogged(true);}} />}<ReadingConversation stage="after" /></> : <>
         <h1 className="reader-title" ref={heading} tabIndex={-1}>{story.title}</h1>
         {page === 0 && <ReadingConversation stage="before" />}
@@ -139,6 +146,7 @@ function StoryReader({ story, initial, onClose, onSaved, onNext }) {
             return !word || !help ? <span key={index}>{token}</span> : <button key={index} className={className} onClick={() => hear(word)} aria-label={`Hear ${word}`} title={`Hear ${word}`}>{token}</button>;
           })}
         </div>
+        {help && <div className="story-picture-slot">{getWordArt(pictureWord) ? <WordPicture word={pictureWord} onHear={hear} /> : <DinoArt />}</div>}
         <p className="reader-notice" role="status">{notice}</p>
         {lastPage && <section className="story-question"><h2>Let's talk</h2><p>{story.question}</p><details><summary>For the grown-up</summary><p>{story.answer}</p></details></section>}
         <nav className="reader-navigation" aria-label="Story pages"><button disabled={page === 0 || busy} onClick={() => move(page - 1)} title="Previous page" aria-label="Previous page"><ArrowLeft /></button><progress max={story.sentences.length} value={page + 1} aria-label="Reading progress" /><button disabled={busy} onClick={() => move(lastPage ? 0 : page + 1, lastPage)} aria-label={lastPage ? 'Finish story' : 'Next page'} title={lastPage ? 'Finish story' : 'Next page'}>{lastPage ? <Check /> : <ArrowRight />}</button></nav>

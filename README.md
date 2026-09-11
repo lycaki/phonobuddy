@@ -666,3 +666,82 @@ do not create a new one to troubleshoot a failed sync.
   repeated and single-word batches, saved batch/manual-next choices, record edits,
   duplicate prevention, weekly totals, backup contents, original-data preservation,
   school recording vocabulary and phone/tablet/desktop/print layouts.
+
+## 11 September 2026: Dinosaur artwork and word-first reveals
+
+### Graphics
+
+- Added 17 original AI illustrations using the built-in image generator: a sunny
+  dinosaur valley, a reading dinosaur, a dinosaur-driven rover and 14 word images.
+  The word bank currently covers frog, clock, fish, bird, house, mouse, ball,
+  kite, boat, cloud, pie, lamb, cat and dog. It is a starter picture bank, not
+  artwork for every school word or a full illustrated edition of every story.
+- The home page, Dino Road Builders map/game and story shelf now use the new
+  artwork. The original owl remains in existing sound-teaching activities.
+  Words > Picture words offers direct word selection, previous/next and playback.
+  It is read-together practice and never adds mastery ticks or attempt events.
+- Final web assets live in `public/art/`; all 17 images total 557,662 bytes.
+  `public/art/prompts.json` records the full prompt set and source filenames;
+  `public/art/README.md` documents adding more. Generated PNG originals remain
+  outside the public repository. Word images are optimised WebP files, mascots
+  retain transparency, and file names are versioned for later replacements.
+- Image slots have stable dimensions, preserve the whole subject and handle
+  loading failures without blocking audio or navigation. New reveal animation
+  respects reduced motion. Printable reading records remain ink-friendly.
+
+### No picture guessing
+
+- Word pictures are hidden while the child attempts a word. Word grids and story
+  shelf entries show words or a neutral dinosaur instead of answer pictures.
+  Existing word-grid emoji hints were also removed from the child word browsers.
+- After Logan tries the word, tapping its Hear control plays the existing parent
+  recording first and reveals supported artwork only when playback starts.
+  This explicit reveal is not a claim that the app recognised or graded speech.
+  A missing, blocked or delayed voice does not expose the answer image early.
+- Year 1 roads require the saved parent Yes verdict before playback/reveal. Real
+  word pictures are never attached to pseudo-words. The existing short automatic
+  next-word transition, skip, next batch and manual level controls remain.
+- Changing the word or story page clears the reveal; turning story help off also
+  clears it. Covered spelling hides both word and picture. Spelling pictures are
+  only revealed by playback in the Check stage, after writing the answer.
+- Both story collections and the older blending activity follow the reveal rule.
+  Parent Recording Studio reference pictures and phoneme-teaching mnemonics are
+  not word-reading assessments and retain their existing teaching/reference role.
+
+### Dinosaur sounds
+
+- Short, quiet cartoon dinosaur growls accompany main page changes, word-view
+  changes and story page turns. The road-complete dinosaur can also be tapped.
+  These are synthesised Web Audio effects, not recordings or speech synthesis.
+- The Dino sounds toggle defaults on and remembers its choice on this browser in
+  the separate localStorage key `phonobuddy:dino-sounds:v1`. It is not family
+  cloud data and is not included in the IndexedDB progress backup. Muting effects
+  does not mute Dad's voice or the selected fallback reading voice.
+- Effects never queue behind speech, stop when a word starts, are rate-limited,
+  stop when the tab is hidden and tolerate blocked/unavailable Web Audio. The
+  toggle is hidden in Recording Studio; entering/leaving the studio is quiet.
+- Recorded-audio playback now retains its cancellation/cleanup and voice-priority
+  guard until the clip actually ends, even for older callers that return as soon
+  as playback starts. The optional `onStart` hook only controls visual reveals.
+
+### Data safety and checks
+
+- No changes to the database name, schema, recording IDs, saved clip bytes,
+  family code, curriculum mappings, cloud merge rules or backup/restore rules.
+  The 72 Year 1 stories, ten earlier stories, school lists, bookmarks, reading
+  records and progression data remain intact. Artwork/effects do not write to
+  the recordings store or upload audio. Missing-only recording protection remains.
+- Tests use isolated browsers and synthetic test clips with Firebase blocked or
+  mocked. They never download, edit or reset recordings on family devices.
+- Added automated checks for word-first reveals, playback-start timing, stale
+  callbacks, covered spelling, original-recording priority and byte preservation,
+  muted/blocked/delayed effects, missing images, complete art assets, reduced
+  motion and phone/tablet/desktop image layout. Real iPad/iPhone listening still
+  needs checking; browser tests do not establish device speaker or voice quality.
+- Refresh the same live GitHub Pages site to test. Do not clear website data,
+  reinstall the app, change family code or restore a backup just to get artwork.
+- Verification passed: content validation, ESLint, production build and the
+  expanded 79-case suite (77 passed, two existing Windows WebKit Blob skips).
+  Native Chromium audio sampling confirmed a non-silent, non-clipping roar that
+  returns to silence. This Windows WebKit runtime has no native AudioContext;
+  its sound-effect behaviour is covered with mocks, not real audio output.

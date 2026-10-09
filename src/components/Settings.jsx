@@ -106,7 +106,7 @@ export default function Settings({ familyCode, onSetFamilyCode, onPullFromCloud,
         progress: allProgress,
         sessions,
         attempts,
-        settings: settings.filter(s => s.key !== 'familyCode' && !s.key.startsWith('year1Synced:')),
+        settings: settings.filter(s => s.key !== 'familyCode' && s.key !== 'familyBooksKey' && !s.key.startsWith('year1Synced:')),
       };
 
       const json = JSON.stringify(backup, null, 2);

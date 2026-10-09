@@ -9,6 +9,7 @@ import { DinoArt, WordPicture } from '../art/ReadingArt';
 import { getWordArt } from '../../data/wordArt';
 import { playDinoRoar } from '../../utils/dinoSounds';
 import HomeReadingRecord, { ReadingConversation, ReadingEntryForm } from '../school/HomeReadingRecord';
+import FamilyBooks from '../books/FamilyBooks';
 import './Year1Reading.css';
 
 const bookmarkKey = id => `year1Story:${id}`;
@@ -16,6 +17,7 @@ const bookmarkKey = id => `year1Story:${id}`;
 export default function Year1Reading({ year1, progress }) {
   const [legacy, setLegacy] = useState(false);
   const [record, setRecord] = useState(false);
+  const [family, setFamily] = useState(false);
   const [selected, setSelected] = useState(null);
   const [history, setHistory] = useState({});
   const [loaded, setLoaded] = useState(false);
@@ -29,6 +31,7 @@ export default function Year1Reading({ year1, progress }) {
   }, []);
 
   if (record) return <HomeReadingRecord onBack={() => setRecord(false)} />;
+  if (family) return <FamilyBooks onBack={() => setFamily(false)} />;
   if (legacy) return <><button className="reading-return" onClick={() => setLegacy(false)}><ArrowLeft size={20} /> Year 1 stories</button><Reading progress={progress} /></>;
   if (selected) return <StoryReader key={selected.id} story={selected} initial={history[selected.id]}
     onClose={() => setSelected(null)} onSaved={value => setHistory(previous => ({ ...previous, [selected.id]: value }))}
@@ -41,6 +44,9 @@ export default function Year1Reading({ year1, progress }) {
   return (
     <div className="year1-reading">
       <header className="reading-heading"><div><p>YEAR 1</p><h1>Story shelf</h1></div><DinoArt /></header>
+      <button type="button" className="family-entry" onClick={() => { void playDinoRoar(); setFamily(true); }}>
+        <DinoArt /><span><strong>Family picture books</strong><small>Dash Adventures starring our family</small></span><ArrowRight aria-hidden="true" size={24} />
+      </button>
       <button className="reading-return" onClick={() => setRecord(true)}><NotebookPen size={20} />Reading record</button>
       <label className="section-choice" htmlFor="story-section">Reading section</label>
       <select id="story-section" value={block.id} onChange={event => year1.setSelectedBlock(event.target.value)}>

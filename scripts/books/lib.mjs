@@ -60,7 +60,11 @@ export async function writeJson(file, value) {
 
 export async function listImages(dir) {
   if (!existsSync(dir)) return [];
-  return (await readdir(dir)).filter(name => /\.(jpe?g|png|webp|heic)$/i.test(name)).sort().map(name => path.join(dir, name));
+  const names = await readdir(dir);
+  // The image library cannot read iPhone HEIC photos; export them as JPEG first.
+  const heic = names.filter(name => /\.hei[cf]$/i.test(name));
+  if (heic.length) console.warn(`  Skipping ${heic.join(', ')}: save HEIC photos as JPEG (on iPhone: Settings > Camera > Formats > Most Compatible, or share as JPEG).`);
+  return names.filter(name => /\.(jpe?g|png|webp)$/i.test(name)).sort().map(name => path.join(dir, name));
 }
 
 const MEDIA = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };

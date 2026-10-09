@@ -745,3 +745,66 @@ do not create a new one to troubleshoot a failed sync.
   Native Chromium audio sampling confirmed a non-silent, non-clipping roar that
   returns to silence. This Windows WebKit runtime has no native AudioContext;
   its sound-effect behaviour is covered with mocks, not real audio output.
+
+## 9 October 2026: Family picture books (Dash Adventures)
+
+### Stories
+
+- Twelve original picture books in `books/stories.mjs`, starring Logan, his sister,
+  Dad, Mum and Dash (the PhonoBuddy dinosaur). Every page is written to be a
+  full-screen picture with one or two sentences along the bottom, like his school
+  book *Tiger's Fish* (Project X Alien Adventures, Phase 3). The school book itself
+  is not copied: it belongs to Oxford University Press, and its eBook is available
+  through the school's Oxford Owl login.
+- Six levels, two books each: Phase 3 (Tiger's Fish level), Phase 4, then the ELS
+  Year 1 sets ay ou ie ea, oy ir ue aw, wh ph ew oe au ey and the split digraphs.
+  `books/OVERVIEW.md` lists every page, the practise/tricky/challenge words and the
+  before/after reading questions. Regenerate it with `npm run books:overview`.
+- `npm run validate:books` (also in the deploy workflow) checks structure, that the
+  word lists match the text, and a phonics-level heuristic: a word spelled with
+  sounds from a later level must be rewritten or listed as a challenge word.
+- Pictures carry a few exact words (labels, signs, sound effects), and Logan solves
+  problems by reading words in the pictures, for example a jar label in
+  *Dash Grew and Grew*.
+
+### Private by design
+
+- The books show real family members, so the pictures, names and audio are
+  published only as AES-GCM ciphertext in `public/books/family/`. A family password
+  (PBKDF2-SHA-256, 600,000 iterations; not case-sensitive) unlocks them on a device
+  and can be remembered there. The stored key is excluded from progress backups and
+  is never cloud-synced. Lock again from the shelf's parent notes.
+- Real names, outfits and reference photos live in gitignored `books/private/`; API
+  keys come from the environment or a gitignored `.env`. Photos are resized and
+  stripped of EXIF before they are sent to the image model.
+
+### Generating
+
+- `npm run books:generate` draws character sheets from the photos, then every page
+  with OpenRouter (default Nano Banana Pro, `google/gemini-3-pro-image`; GPT Image
+  2.5 and Nano Banana 2.1 are options), records read-aloud clips with Fish Audio,
+  and locks the pack. See `books/README.md` for the step-by-step guide, costs and
+  the quality checklist. Nothing has been generated yet: it needs
+  `OPENROUTER_API_KEY`, `FISH_AUDIO_API_KEY`, `FAMILY_BOOKS_PASSWORD`, the sister's
+  name and the photos.
+- A fresh checkout restores earlier pictures and clips from the encrypted pack, so a
+  later session only redraws pages whose scene changed. Encrypted files are named
+  by content hash, so unchanged pictures keep the same file.
+
+### Reading
+
+- Stories > Family picture books opens the shelf. Each book has a cover, a "Words in
+  this book" page, an "In this story..." cast page, the story pages and an ending
+  with a tappable retell map, talk-about-it questions and Add to reading record.
+- Each page fills the screen: the whole picture (letterboxed over a blurred copy of
+  itself), speech bubbles in the calm corner, and the sentence in large Andika
+  type along the bottom. Tap a word to hear it: Dad's recording first, then the
+  book's Fish Audio clip, then the chosen reading voice. Tap the speaker or the
+  line to hear the sentence with a follow-along highlight. "Read to me" reads every
+  page and bubble aloud. Swipe, the arrows or the keyboard turn pages.
+- Reading places and read counts are saved per device (`pictureBook:<id>`). No
+  change to the database schema, recordings, cloud paths or earlier stories.
+- Tests: `tests/picture-books.spec.js` uses a synthetic locked pack (no family data)
+  and covers locking, wrong passwords, remembered keys, word/line/bubble audio,
+  recording priority, speech fallback, missing pictures, bookmarks and layout at
+  iPad landscape, iPad portrait and phone sizes. 54 Chromium tests pass.

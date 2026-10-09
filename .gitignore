@@ -5,3 +5,5 @@ dist
 tmp/
 test-results/
 playwright-report/
+.env
+books/private/

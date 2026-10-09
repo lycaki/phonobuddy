@@ -1,0 +1,26 @@
+{
+  "_help": "Copy to books/private/cast.json (gitignored) and fill in. Photos go in books/private/photos/<hero|sister|dad|mum>/. 'looks' is only used when there are no photos. 'voice' is an optional Fish Audio voice id for that person's speech bubbles.",
+  "hero": {
+    "name": "Logan",
+    "age": 5,
+    "looks": "a cheerful five-year-old boy with ... hair",
+    "outfit": "a red t-shirt with a small green dinosaur on the front, blue jeans and trainers"
+  },
+  "sister": {
+    "name": "SISTER'S NAME",
+    "age": 7,
+    "looks": "a cheerful girl with ... hair",
+    "outfit": "a yellow t-shirt dress with white spots, leggings and trainers"
+  },
+  "dad": {
+    "looks": "a friendly dad with ...",
+    "outfit": "a green jumper and jeans"
+  },
+  "mum": {
+    "looks": "a friendly mum with ...",
+    "outfit": "a blue-and-white striped top and jeans"
+  },
+  "narrator": {
+    "voice": null
+  }
+}

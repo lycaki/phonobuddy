@@ -7,6 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "validate:year1": "node scripts/validate-year1.mjs",
+    "validate:books": "node scripts/validate-books.mjs",
+    "books:generate": "node scripts/books/generate.mjs",
+    "books:voices": "node scripts/books/voices.mjs",
+    "books:overview": "node scripts/books/overview.mjs",
     "generate:monetization": "node scripts/generate-monetization-pack.mjs",
     "lint": "eslint .",
     "test": "playwright test",
@@ -29,6 +33,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "sharp": "^0.34.5",
     "vite": "^8.0.1"
   }
 }

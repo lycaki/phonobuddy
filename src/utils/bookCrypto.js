@@ -1,7 +1,7 @@
 // Encryption for the private family picture books.
 //
-// The books star real family members, so their pictures, names and audio are
-// published only as AES-GCM ciphertext. A family password (PBKDF2, SHA-256)
+// Private packs store pictures, names and audio as AES-GCM ciphertext.
+// A family password (PBKDF2, SHA-256)
 // unlocks them on a device. The same module runs in the browser and in Node 20+
 // (scripts/books), so the generator and the reader share one format:
 //
@@ -11,6 +11,7 @@
 //                             assets keep the same file between regenerations.
 
 export const PACK_FORMAT = 'phonobuddy-family-books';
+export const PUBLIC_PACK_FORMAT = 'phonobuddy-public-books';
 export const PACK_VERSION = 1;
 const CHECK_TEXT = 'phonobuddy family books';
 const encoder = new TextEncoder();
@@ -74,6 +75,11 @@ export async function sha256Hex(bytes) {
 // Asset references inside the encrypted book text: { h: file hash, t: media type }.
 export const assetName = ref => `a/${ref.h}.bin`;
 
+export const isPublicIndex = index => index?.format === PUBLIC_PACK_FORMAT;
+export const publicIndex = (catalog, updated = new Date().toISOString().slice(0, 10)) => ({
+  format: PUBLIC_PACK_FORMAT, version: PACK_VERSION, updated, catalog,
+});
+
 export async function sealIndex(key, kdf, catalog, updated = new Date().toISOString().slice(0, 10)) {
   return {
     format: PACK_FORMAT,
@@ -86,6 +92,7 @@ export async function sealIndex(key, kdf, catalog, updated = new Date().toISOStr
 }
 
 export function assertIndex(index) {
+  if (isPublicIndex(index) && index.version === PACK_VERSION && Array.isArray(index.catalog?.books)) return index;
   if (index?.format !== PACK_FORMAT || index.version !== PACK_VERSION || !index.kdf || !index.check || !index.catalog) {
     throw new Error('The family book list is not in a format this version of PhonoBuddy understands.');
   }

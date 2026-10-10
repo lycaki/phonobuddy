@@ -30,7 +30,7 @@ export function loadEnv() {
 }
 
 export function parseArgs(argv) {
-  const args = { books: [], pages: [], step: 'all', force: false, dryRun: false, newPassword: false, allowPlaceholderNames: false };
+  const args = { books: [], pages: [], roles: [], step: 'all', force: false, keep: false, dryRun: false, newPassword: false, allowPlaceholderNames: false };
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
     const value = () => argv[++index];
@@ -38,9 +38,12 @@ export function parseArgs(argv) {
     else if (flag === '--pages') args.pages.push(...value().split(',').map(item => item.trim()));
     else if (flag === '--step') args.step = value();
     else if (flag === '--model') args.model = value();
+    else if (flag === '--role') args.roles.push(...value().split(',').map(item => item.trim()));
     else if (flag === '--force') args.force = true;
+    else if (flag === '--keep') args.keep = true;
     else if (flag === '--dry-run') args.dryRun = true;
     else if (flag === '--new-password') args.newPassword = true;
+    else if (flag === '--public') args.public = true;
     else if (flag === '--allow-placeholder-names') args.allowPlaceholderNames = true;
     else if (flag === '--help' || flag === '-h') args.help = true;
     else throw new Error(`Unknown option ${flag}. Run with --help.`);

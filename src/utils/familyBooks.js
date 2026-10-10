@@ -1,5 +1,5 @@
 import { db, getSetting, setSetting } from './storage';
-import { assetName, assertIndex, decryptBytes, decryptJson, deriveKey, openIndex } from './bookCrypto';
+import { assetName, assertIndex, decryptBytes, decryptJson, deriveKey, isPublicIndex, openIndex } from './bookCrypto';
 
 // The unlocked key is kept on this device only (never in backups or cloud sync).
 export const FAMILY_KEY_SETTING = 'familyBooksKey';
@@ -28,6 +28,7 @@ export async function unlockFamilyBooks(index, password, remember) {
 }
 
 export async function openRememberedFamilyBooks(index) {
+  if (isPublicIndex(index)) return { key: null, catalog: index.catalog, remembered: false };
   let saved;
   try { saved = await getSetting(FAMILY_KEY_SETTING); } catch { return null; }
   if (!saved?.key || saved.salt !== index.kdf.salt) return null;
@@ -56,7 +57,7 @@ export function createAssetLoader(key) {
       if (!ref?.h) return Promise.resolve(null);
       if (!urls.has(ref.h)) {
         const pending = fetchAsset(ref)
-          .then(bytes => decryptBytes(key, bytes))
+          .then(bytes => key ? decryptBytes(key, bytes) : bytes)
           .then(bytes => URL.createObjectURL(new Blob([bytes], { type: ref.t })));
         pending.catch(() => urls.delete(ref.h));
         urls.set(ref.h, pending);
@@ -64,7 +65,8 @@ export function createAssetLoader(key) {
       return urls.get(ref.h);
     },
     async json(ref) {
-      return decryptJson(key, await fetchAsset(ref));
+      const bytes = await fetchAsset(ref);
+      return key ? decryptJson(key, bytes) : JSON.parse(new TextDecoder().decode(bytes));
     },
     dispose() {
       for (const pending of urls.values()) pending.then(objectUrl => URL.revokeObjectURL(objectUrl), () => {});

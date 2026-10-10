@@ -2,7 +2,10 @@ import { test, expect } from '@playwright/test';
 import { buildFamilyPack, serveFamilyPack } from './fixtures/familyPack.js';
 
 let pack;
-test.beforeAll(async () => { pack = await buildFamilyPack(); });
+let publicPack;
+test.beforeAll(async () => {
+  [pack, publicPack] = await Promise.all([buildFamilyPack(), buildFamilyPack({ publicAccess: true })]);
+});
 
 async function setup(page, files = pack) {
   await page.route(/firebaseio|firebasedatabase/, route => route.abort());
@@ -47,6 +50,34 @@ async function unlock(page, password = 'purple rocket teapot') {
 }
 
 const mp3Plays = page => page.evaluate(() => window.played.filter(type => type === 'audio/mpeg').length);
+
+test('public books open without a password, load their pictures and remember the reading place', async ({ page }) => {
+  await setup(page, publicPack);
+  await openShelf(page);
+  await expect(page.getByRole('button', { name: /The Test Egg/ })).toBeVisible();
+  await expect(page.getByLabel('Family password')).toHaveCount(0);
+  await expect.poll(() => page.locator('.family-cover img').first().evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+  await page.getByText('Parent notes').click();
+  await expect(page.getByText('These original books are ready to read without a password.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Lock on this device/ })).toHaveCount(0);
+  await page.getByRole('button', { name: /The Test Egg/ }).click();
+  const reader = page.getByRole('dialog', { name: 'The Test Egg' });
+  await reader.getByRole('button', { name: /Start/ }).click();
+  await reader.getByRole('button', { name: 'Next page' }).click();
+  await reader.getByRole('button', { name: 'Next page' }).click();
+  await expect(reader.getByText('Page 1 of 4')).toBeVisible();
+  await expect.poll(() => reader.locator('.pb-image').evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+  await reader.getByRole('button', { name: 'Hear spots' }).click();
+  await expect.poll(() => page.evaluate(() => window.spoken)).toContain('spots');
+  await reader.getByRole('button', { name: 'Next page' }).click();
+  await reader.getByRole('button', { name: 'Close book' }).click();
+  await expect(page.getByRole('button', { name: /The Test Egg/ })).toContainText('Continue at page 2');
+  await page.reload();
+  await page.getByRole('button', { name: /Year 1 Dino/ }).waitFor();
+  await openShelf(page);
+  await expect(page.getByRole('button', { name: /The Test Egg/ })).toContainText('Continue at page 2');
+  await expect(page.getByLabel('Family password')).toHaveCount(0);
+});
 
 test('family books stay locked until the family password opens them, then the device remembers', async ({ page }) => {
   await setup(page);
@@ -192,9 +223,8 @@ test('without a book pack the shelf explains that no family books exist yet', as
 for (const [name, size] of [['iPad landscape', { width: 1180, height: 820 }], ['iPad portrait', { width: 820, height: 1180 }], ['phone', { width: 390, height: 844 }]]) {
   test(`reader layout keeps the words readable on ${name}`, async ({ page }) => {
     await page.setViewportSize(size);
-    await setup(page);
+    await setup(page, publicPack);
     await openShelf(page);
-    await unlock(page);
     await page.getByRole('button', { name: /The Test Egg/ }).click();
     const reader = page.getByRole('dialog', { name: 'The Test Egg' });
     await reader.getByRole('button', { name: /Start/ }).click();

@@ -6,7 +6,7 @@ export default defineConfig({
   workers: 2,
   use: { baseURL: 'http://127.0.0.1:5199/phonobuddy/', viewport: { width: 820, height: 1180 }, trace: 'retain-on-failure' },
   projects: [
-    { name: 'chromium', testMatch: ['phonobuddy.spec.js', 'reading-voice.spec.js', 'school-reading.spec.js', 'reading-art.spec.js', 'picture-books.spec.js'], use: { browserName: 'chromium' } },
+    { name: 'chromium', testMatch: ['phonobuddy.spec.js', 'reading-voice.spec.js', 'school-reading.spec.js', 'reading-art.spec.js', 'picture-books.spec.js', 'public-book-pack.spec.js'], use: { browserName: 'chromium' } },
     // Windows WebKit cannot persist Blob data in its test IndexedDB store.
     // Run the real recording persistence suite in Chromium; keep WebKit UI and
     // non-Blob reading persistence coverage separate and explicit.

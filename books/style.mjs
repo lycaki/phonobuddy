@@ -22,7 +22,8 @@ export const ART_STYLE = [
 ].join(' ');
 
 // The default cast. books/private/cast.json overrides any field.
-// `looks` is only used when no reference photos are supplied.
+// `looks` describes the person; with reference photos it tells the image model
+// which features matter (hair worn loose, no glasses and so on).
 export const DEFAULT_CAST = {
   hero: {
     name: 'Logan', pronoun: 'he', kind: 'person', age: 5,
@@ -49,6 +50,8 @@ export const DEFAULT_CAST = {
     looks: 'Dash, a tiny friendly dinosaur about the size of a kitten (he fits in two cupped hands): ' +
       'turquoise-green skin, rounded coral-orange back plates, big sparkly eyes, a wide happy grin ' +
       'with no sharp teeth, short arms, chunky little feet and a yellow neckerchief',
+    // Page prompts only: without it he grows from page to page.
+    scale: 'He is tiny, the size of a kitten, never taller than the knee of a small child, and the same size on every page',
     // The PhonoBuddy dinosaur mascot, so Dash matches the rest of the app.
     reference: 'public/art/dino-reader-v1.webp',
   },
@@ -61,13 +64,39 @@ export const DEFAULT_CAST = {
 
 export const PEOPLE = ['hero', 'sister', 'dad', 'mum'];
 
+const LIKENESS = 'This is a real person and their family must recognise them at a glance, so do not swap in a generic cute face: ' +
+  'keep their own face shape and the real proportions of their forehead, eyes, eyebrows, nose, mouth and jaw, their exact skin tone, ' +
+  'and their hair colour, texture, length and style. The first photo is the best guide; where the photos differ, follow the description.';
+
+// Without this the image model turns children into big-headed toddlers.
+const proportions = member => (member.age && member.age < 13
+  ? `They are ${member.age} years old and must look ${member.age}: the natural head and body proportions of a child that age in an animated feature film, never a baby, toddler, chibi or bobblehead, and the head is not oversized.`
+  : 'Natural adult proportions.');
+
+// People are drawn face first: a close portrait straight from the photos, then
+// the full-body sheet from that portrait, so the likeness is not lost at small size.
+export function personPortraitPrompt(member) {
+  return [
+    `Close-up head-and-shoulders portrait of the person in the attached photos${member.looks ? `: ${member.looks}` : ''}.`,
+    'Their head and shoulders fill the frame, cropped at the chest: do not show the waist, legs or feet.',
+    `Stylise them as a friendly animated character${member.age ? ` aged ${member.age}` : ''}, smiling warmly and looking at the viewer.`,
+    LIKENESS,
+    proportions(member),
+    member.outfit ? `Outfit: ${member.outfit}.` : '',
+    'Square format, soft pastel background.',
+    ART_STYLE,
+    'No text, letters, numbers, logos or watermarks.',
+  ].filter(Boolean).join(' ');
+}
+
 export function castSheetPrompt(role, member, hasPhotos) {
   const who = hasPhotos
-    ? `the person in the attached photos. Keep them clearly recognisable (face shape, hair colour and style, eye colour, skin tone, glasses or freckles if they have them) while stylising them as a friendly animated character${member.age ? ` aged ${member.age}` : ''}`
+    ? `the character in the first attached image, which is the approved portrait of them${member.looks ? ` (${member.looks})` : ''}. Copy that face, hair, skin tone and outfit exactly in every view; the other attached images are photos of the real person, for their build and the back and sides of their hair`
     : member.looks;
   return [
     `Character reference sheet for a picture book. Create ${who}.`,
     member.outfit ? `Outfit: ${member.outfit}.` : '',
+    hasPhotos ? proportions(member) : '',
     'Show the same character three times side by side: front view, three-quarter view and side view, full body, standing in a relaxed happy pose.',
     'Plain white background, even soft lighting, no props.',
     ART_STYLE,
@@ -84,19 +113,24 @@ export function portraitPrompt(member) {
   ].join(' ');
 }
 
-export function pagePrompt({ scene, castLines, words = [], calm, cover = false, continuity = false }) {
+export function pagePrompt({ scene, castLines, words = [], earlierWords = [], calm, cover = false, continuity = false }) {
+  // The previous page is attached for continuity, and its lettering leaks through unless it is named and banned.
+  const stale = earlierWords.filter(word => !words.includes(word));
+  const blank = stale.length
+    ? ` Earlier pages showed ${stale.map(word => `"${word}"`).join(', ')}: that lettering must not appear here, so any sign, label or box that carried it is now plain and blank.`
+    : '';
   const text = words.length
-    ? `The ONLY written words in the picture are: ${words.map(word => `"${word}"`).join(', ')}. Render each exactly once, spelled exactly as given, as big clear rounded letters that are part of the scene (a label tag with an arrow, a sign, or bold comic sound-effect lettering). No other letters, words, numbers, captions, speech bubbles, logos or watermarks anywhere.`
-    : 'Do not include any written words, letters, numbers, speech bubbles, captions, logos or watermarks anywhere.';
+    ? `The ONLY written words in the picture are: ${words.map(word => `"${word}"`).join(', ')}. Render each exactly once, spelled exactly as given, as big clear rounded letters that are part of the scene (a label tag with an arrow, a sign, or bold comic sound-effect lettering). No other letters, words, numbers, captions, speech bubbles, logos or watermarks anywhere.${blank}`
+    : `Do not include any written words, letters, numbers, speech bubbles, captions, logos or watermarks anywhere: every sign, label, box and book in the picture is plain and blank.${blank}`;
   return [
     ART_STYLE,
     cover
-      ? 'Book cover illustration, landscape 4:3, filling the whole frame. Keep the top third of the picture calm and simple (sky or soft background) because the book title will be placed there.'
+      ? 'Book cover illustration, landscape 4:3, filling the whole frame as one continuous picture: no separate band, strip, border or split. Leave calm, simple space in the top third (plain wall, sky or soft background that belongs to the scene) because the book title will be placed there.'
       : 'Landscape 4:3 illustration that fills the whole frame edge to edge: no border, frame, panels or white margins. Keep the main action in the centre.',
-    calm ? `Keep the ${calm.replace('-', ' ')} corner of the picture calm and simple, because a speech bubble will be placed there later.` : '',
+    calm ? `Keep the ${calm.replace('-', ' ')} corner of the picture plain and uncluttered: background only, no faces or important objects there. Do not draw a speech bubble, thought bubble or text box anywhere.` : '',
     `Scene: ${scene}`,
     castLines.length ? `Characters (match the attached reference sheets exactly: faces, hair, clothes, colours and proportions): ${castLines.join(' ')}` : '',
-    continuity ? 'The last attached image is the previous page of this book: keep the same setting, lighting, props and clothes where the scene continues.' : '',
+    continuity ? 'The last attached image is the previous page of this book: keep the same setting, lighting, props and clothes where the scene continues. Where it disagrees with the reference sheets or the scene, the reference sheets and the scene win.' : '',
     text,
   ].filter(Boolean).join('\n');
 }

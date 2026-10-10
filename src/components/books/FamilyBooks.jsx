@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Lock, LockOpen } from 'lucide-react';
-import { WrongPasswordError } from '../../utils/bookCrypto';
+import { isPublicIndex, WrongPasswordError } from '../../utils/bookCrypto';
 import {
   createAssetLoader, fetchFamilyIndex, forgetFamilyBooks, loadBookmarks, openRememberedFamilyBooks, saveBookmark, unlockFamilyBooks,
 } from '../../utils/familyBooks';
@@ -150,9 +150,9 @@ export default function FamilyBooks({ onBack }) {
       </div>
       <details className="reading-parent family-notes">
         <summary>Parent notes</summary>
-        <p>These original books star our family, so their pictures, names and voices are stored locked. This device remembers the password until you lock it again. Reading places and read counts are saved on this device only.</p>
+        <p>{isPublicIndex(index) ? 'These original books are ready to read without a password.' : 'These original books star our family, so their pictures, names and voices are stored locked. This device remembers the password until you lock it again.'} Reading places and read counts are saved on this device only.</p>
         <p>Level 1 matches the school's Phase 3 books; each level adds the next set of sounds. Words under "Grown-up help" are fine to read for Logan.</p>
-        <button type="button" onClick={lock}><Lock size={18} /> Lock on this device</button>
+        {!isPublicIndex(index) && <button type="button" onClick={lock}><Lock size={18} /> Lock on this device</button>}
       </details>
     </>}
     {reading && <PictureBookReader key={reading.book.id} book={reading.book} loader={library.loader} colour={reading.summary.colour}

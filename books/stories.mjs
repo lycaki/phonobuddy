@@ -25,7 +25,7 @@ export const BOOKS = [
     cast: ['hero', 'sister', 'dad', 'mum'],
     mystery: 'A big green egg... what is inside?',
     cover: {
-      scene: `The doorway of a sunny wooden garden shed (${HOME}). {hero} and {sister} peer round the door at a huge glowing green egg with darker green spots, sitting in a flower pot full of straw. A tiny crack in the egg shows one curious eye peeping out.`,
+      scene: `The doorway of a sunny wooden garden shed (${HOME}). {hero} and {sister} peer round the door at a huge glowing green egg with darker green spots, sitting in a flower pot full of straw. A tiny crack in the egg shows one friendly, round cartoon eye peeping out.`,
       cast: ['hero', 'sister'],
     },
     practise: ['egg', 'shed', 'crack', 'chomp', 'quick', 'tail'],
@@ -64,7 +64,7 @@ export const BOOKS = [
         'Through the shed window we see Dad walking up the garden path holding a mug of tea. Inside the shed, {hero} and {sister} hurry Dash into a cardboard box.',
         { cast: ['hero', 'sister', 'dash', 'dad'], bubble: say('hero', 'Quick, Dash! Get in the box!'), words: ['box'] }),
       page('Dad looks in. He sees {hero} and {sister}.',
-        'Dad stands in the shed doorway with his mug, eyebrows raised. {hero} and {sister} stand in front of the cardboard box with innocent, much-too-big smiles.',
+        'Dad stands in the shed doorway with his mug, eyebrows raised. {hero} and {sister} stand in front of the cardboard box with innocent, much-too-big smiles. The box flaps are shut and Dash is completely hidden inside: he cannot be seen anywhere in the picture.',
         { cast: ['hero', 'sister', 'dad'] }),
       page('But the box has a tail!',
         'Visual joke: behind the children, a little turquoise-green tail pokes out of the cardboard box and wags. Dad is looking at the children, not at the box.',

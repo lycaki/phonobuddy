@@ -9,6 +9,7 @@
     "validate:year1": "node scripts/validate-year1.mjs",
     "validate:books": "node scripts/validate-books.mjs",
     "books:generate": "node scripts/books/generate.mjs",
+    "books:import": "node scripts/books/import-art.mjs",
     "books:voices": "node scripts/books/voices.mjs",
     "books:overview": "node scripts/books/overview.mjs",
     "generate:monetization": "node scripts/generate-monetization-pack.mjs",

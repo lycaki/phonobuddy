@@ -2,21 +2,21 @@
 // the page, so the family-book reader can be tested without the real books.
 import { Buffer } from 'node:buffer';
 import sharp from 'sharp';
-import { deriveKey, encryptBytes, newKdf, sealIndex, sha256Hex } from '../../src/utils/bookCrypto.js';
+import { deriveKey, encryptBytes, newKdf, publicIndex, sealIndex, sha256Hex } from '../../src/utils/bookCrypto.js';
 
 export const FAMILY_PASSWORD = 'Purple Rocket Teapot';
 
 const picture = (background, width = 640, height = 480) =>
   sharp({ create: { width, height, channels: 3, background } }).webp().toBuffer();
 
-export async function buildFamilyPack() {
+export async function buildFamilyPack({ publicAccess = false } = {}) {
   const kdf = newKdf(1000);
   const key = await deriveKey(FAMILY_PASSWORD, kdf);
   const files = new Map();
   const store = async (bytes, type) => {
     const plain = new Uint8Array(bytes);
     const h = (await sha256Hex(plain)).slice(0, 32);
-    files.set(`a/${h}.bin`, Buffer.from(await encryptBytes(key, plain)));
+    files.set(`a/${h}.bin`, Buffer.from(publicAccess ? plain : await encryptBytes(key, plain)));
     return { h, t: type };
   };
   const clip = name => store(new TextEncoder().encode(`clip:${name}`.padEnd(400, '.')), 'audio/mpeg');
@@ -51,7 +51,7 @@ export async function buildFamilyPack() {
     ],
     cast: {},
   };
-  files.set('index.json', Buffer.from(JSON.stringify(await sealIndex(key, kdf, catalog))));
+  files.set('index.json', Buffer.from(JSON.stringify(publicAccess ? publicIndex(catalog) : await sealIndex(key, kdf, catalog))));
   return files;
 }
 

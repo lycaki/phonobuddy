@@ -1,0 +1,95 @@
+{
+ "format": "phonobuddy-public-books",
+ "version": 1,
+ "updated": "2026-10-10",
+ "catalog": {
+  "series": "Dash Adventures",
+  "books": [
+   {
+    "id": "big-green-egg",
+    "title": "The Big Green Egg",
+    "level": 1,
+    "levelLabel": "Level 1",
+    "levelDetail": "Phase 3, like Tiger's Fish",
+    "colour": "#d64545",
+    "pages": 15,
+    "cover": {
+     "h": "c12566ef418294401bd7ced6df0323a7",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "03c1560095dd7e34294705a0979fdc0b",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "dash-in-the-bath",
+    "title": "Dash in the Bath",
+    "level": 1,
+    "levelLabel": "Level 1",
+    "levelDetail": "Phase 3, like Tiger's Fish",
+    "colour": "#d64545",
+    "pages": 15,
+    "cover": {
+     "h": "404c53e0a03d5cc28a584315f8cf542f",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "1d79ca187036cdbc3c19ad0c3dbfc457",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "crab-grab",
+    "title": "Crab Grab!",
+    "level": 2,
+    "levelLabel": "Level 2",
+    "levelDetail": "Phase 4: longer words",
+    "colour": "#d9a400",
+    "pages": 14,
+    "cover": {
+     "h": "814b8899c93b2a7c24716d1606aeac1b",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "9e041553935e5529868716ab34c614ce",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "monster-in-the-garden",
+    "title": "The Monster in the Garden",
+    "level": 2,
+    "levelLabel": "Level 2",
+    "levelDetail": "Phase 4: longer words",
+    "colour": "#d9a400",
+    "pages": 14,
+    "cover": {
+     "h": "5b4e991da97b88fd408463927e9e10eb",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "107b3036f6d0f4c119ce51815c5f1cc0",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "pie-that-ran-away",
+    "title": "The Pie That Ran Away",
+    "level": 3,
+    "levelLabel": "Level 3",
+    "levelDetail": "New sounds: ay ou ie ea",
+    "colour": "#3d8fd1",
+    "pages": 14,
+    "cover": {
+     "h": "a5c672527c61dc456cad7400b22b05ef",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "946d53fd160cf20ec827c9dad9a21264",
+     "t": "application/json"
+    }
+   }
+  ]
+ }
+}

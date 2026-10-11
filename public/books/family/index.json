@@ -1,7 +1,7 @@
 {
  "format": "phonobuddy-public-books",
  "version": 1,
- "updated": "2026-10-10",
+ "updated": "2026-10-11",
  "catalog": {
   "series": "Dash Adventures",
   "books": [
@@ -74,6 +74,23 @@
     }
    },
    {
+    "id": "dads-big-snore",
+    "title": "Dad's Big Snore",
+    "level": 3,
+    "levelLabel": "Level 3",
+    "levelDetail": "New sounds: ay ou ie ea",
+    "colour": "#3d8fd1",
+    "pages": 14,
+    "cover": {
+     "h": "101dec389766f7bb5f2ac5feb1c21b51",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "a26012f252889d895bab64c4554653bc",
+     "t": "application/json"
+    }
+   },
+   {
     "id": "pie-that-ran-away",
     "title": "The Pie That Ran Away",
     "level": 3,
@@ -87,6 +104,108 @@
     },
     "header": {
      "h": "946d53fd160cf20ec827c9dad9a21264",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "blue-paw-prints",
+    "title": "The Blue Paw Prints",
+    "level": 4,
+    "levelLabel": "Level 4",
+    "levelDetail": "New sounds: oy ir ue aw",
+    "colour": "#3a9a48",
+    "pages": 15,
+    "cover": {
+     "h": "8cb1c9e61d3f118768e7ffe605a6385d",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "aeffd0bfde907a6f4d9ee7c927ac4017",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "magic-crayon",
+    "title": "The Magic Crayon",
+    "level": 4,
+    "levelLabel": "Level 4",
+    "levelDetail": "New sounds: oy ir ue aw",
+    "colour": "#3a9a48",
+    "pages": 15,
+    "cover": {
+     "h": "c312650083adb78923c08b4368e1459b",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "8d3cd08e10e838f2820f27d26b1def99",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "dash-grew-and-grew",
+    "title": "Dash Grew and Grew",
+    "level": 5,
+    "levelLabel": "Level 5",
+    "levelDetail": "New sounds: wh ph ew oe au ey",
+    "colour": "#e07b1f",
+    "pages": 15,
+    "cover": {
+     "h": "c5175159c91e403383e5e710d60ced2e",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "039e1dd9b5fd326280e33ffc2a9b7e63",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "rocket-launch",
+    "title": "Rocket Launch!",
+    "level": 5,
+    "levelLabel": "Level 5",
+    "levelDetail": "New sounds: wh ph ew oe au ey",
+    "colour": "#e07b1f",
+    "pages": 15,
+    "cover": {
+     "h": "cf7bace0a54714fb65508466c752f032",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "613695d8a48910338a2087d5b0d393a9",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "dash-goes-home",
+    "title": "Dash Goes Home",
+    "level": 6,
+    "levelLabel": "Level 6",
+    "levelDetail": "Split sounds: a-e i-e o-e u-e e-e",
+    "colour": "#169e96",
+    "pages": 15,
+    "cover": {
+     "h": "caed02421e3e7db6acf5d9743e897ed4",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "24c4402aba36d1052a21009f5ec38e0e",
+     "t": "application/json"
+    }
+   },
+   {
+    "id": "snowman-in-the-freezer",
+    "title": "The Snowman in the Freezer",
+    "level": 6,
+    "levelLabel": "Level 6",
+    "levelDetail": "Split sounds: a-e i-e o-e u-e e-e",
+    "colour": "#169e96",
+    "pages": 15,
+    "cover": {
+     "h": "0b7294c4df1404a3a217235b7d5d3ec8",
+     "t": "image/webp"
+    },
+    "header": {
+     "h": "7d5c861a5086864b63cff2127e8d74dd",
      "t": "application/json"
     }
    }

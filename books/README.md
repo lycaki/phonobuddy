@@ -6,7 +6,7 @@ school book *Tiger's Fish* (Phase 3: one or two short sentences a page) and each
 level adds the next set of ELS sounds. The overview with every page is in
 [OVERVIEW.md](./OVERVIEW.md).
 
-The current five finished books are published **without a password**, at
+All twelve finished books are published **without a password**, at
 Russell's request. Their cartoon illustrations and story names are publicly
 readable. The generator also supports encrypted packs when privacy is wanted.
 Never commit anything from `books/private/` or any API keys.
